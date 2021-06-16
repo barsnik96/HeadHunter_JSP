@@ -1,7 +1,11 @@
 package by.barsnik96.HeadHunter_JSP.view;
 
+import by.barsnik96.HeadHunter_JSP.domain.Area;
+import by.barsnik96.HeadHunter_JSP.service.MetroLineServiceImpl;
+import by.barsnik96.HeadHunter_JSP.utils.BeanProvider;
 import by.barsnik96.HeadHunter_JSP.utils.DatabaseListModel;
 import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
+import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -99,6 +103,12 @@ public class Load_Settings_Frame extends JDialog
     private JList<String> list_company_industries_n_scope = new JList<>(array);
     private JList<String> list_area = new JList<>(array);
     private JList<String> list_metro = new JList<>(array);
+    //
+    private MetroLineServiceImpl metroLineService;
+    //
+    private Area metro_area = new Area();
+
+
 
 
     // Listener for RadioButton's
@@ -170,7 +180,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.prof_areas_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                prof_areas_n_specializations.add(LoadingParameters.prof_areas_names.get(i) + " :: " + i);
+                prof_areas_n_specializations.add(LoadingParameters.prof_areas_names.get(i)); // + " :: " + i
             }
         }
         for (int i = 0; i < LoadingParameters.specializations_names.size(); i++)
@@ -179,7 +189,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.specializations_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                prof_areas_n_specializations.add(LoadingParameters.specializations_names.get(i) + " :: " + i);
+                prof_areas_n_specializations.add(LoadingParameters.specializations_names.get(i)); // + " :: " + i
             }
         }
         return prof_areas_n_specializations.toArray(new String[prof_areas_n_specializations.size()]);
@@ -194,7 +204,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.company_industries_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                company_industries_n_company_scopes.add(LoadingParameters.company_industries_names.get(i) + " :: " + i);
+                company_industries_n_company_scopes.add(LoadingParameters.company_industries_names.get(i)); // + " :: " + i
             }
         }
         for (int i = 0; i < LoadingParameters.company_scopes_names.size(); i++)
@@ -203,7 +213,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.company_scopes_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                company_industries_n_company_scopes.add(LoadingParameters.company_scopes_names.get(i) + " :: " + i);
+                company_industries_n_company_scopes.add(LoadingParameters.company_scopes_names.get(i)); // + " :: " + i
             }
         }
         return company_industries_n_company_scopes.toArray(new String[company_industries_n_company_scopes.size()]);
@@ -218,10 +228,64 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.areas_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                areas.add(LoadingParameters.areas_names.get(i) + " :: " + i);
+                areas.add(LoadingParameters.areas_names.get(i)); // + " :: " + i
             }
         }
         return areas.toArray(new String[areas.size()]);
+    }
+
+    private String[] DisplayRelatedMetrosInList()
+    {
+        ArrayList<String> metro_lines_n_metro_stations = new ArrayList<String>();
+        for (int i = 0; i < LoadingParameters.metro_lines_names.size(); i++)
+        {
+            // Отфильтровываем нулевые строки
+            if (LoadingParameters.metro_lines_names.get(i) != null)
+            {
+                // Добавляем ненулевые в конец ArrayList
+                metro_lines_n_metro_stations.add(LoadingParameters.metro_lines_names.get(i)); // + " :: " + i
+            }
+        }
+        for (int i = 0; i < LoadingParameters.metro_stations_names.size(); i++)
+        {
+            // Отфильтровываем нулевые строки
+            if (LoadingParameters.metro_stations_names.get(i) != null)
+            {
+                // Добавляем ненулевые в конец ArrayList
+                metro_lines_n_metro_stations.add(LoadingParameters.metro_stations_names.get(i)); // + " :: " + i
+            }
+        }
+        return metro_lines_n_metro_stations.toArray(new String[metro_lines_n_metro_stations.size()]);
+    }
+
+    private void ButtonSelectMetroEnabledByAreasCount()
+    {
+        // Если выбран только 1 Area
+        if (list_area.getModel().getSize() == 1)
+        {
+            for (int i = 0; i < LoadingParameters.areas_names.size(); i++)
+            {
+                // Ищем какой именно это Area
+                if (list_area.getModel().getElementAt(0) == LoadingParameters.areas_names.get(i))
+                {
+                    metro_area.setId(RequestParameters.areas_ids.get(i).intValue());
+                    metro_area.setName(LoadingParameters.areas_names.get(i));
+                    // И для этого Area есть метро
+                    if (metroLineService.metroLineRepository.findAllByArea(metro_area).size() > 0)
+                    {
+                        button_select_metro.setEnabled(true);
+                    }
+                    else
+                    {
+                        button_select_metro.setEnabled(false);
+                    }
+                }
+            }
+        }
+        else // Если выбрано 0 (при первом открытии окна), или больше 1
+        {
+            button_select_metro.setEnabled(false);
+        }
     }
 
 
@@ -242,6 +306,9 @@ public class Load_Settings_Frame extends JDialog
         getContentPane().add(panel_center, BorderLayout.CENTER);
         getContentPane().add(panel_east, BorderLayout.EAST);
         getContentPane().add(panel_south, BorderLayout.SOUTH);
+        // Services autowiring
+        BeanProvider.autowire(this);
+        this.metroLineService = BeanProvider.applicationContext.getBean(MetroLineServiceImpl.class);
         // Fonts settings
         Font arial = new Font("Arial", Font.PLAIN, 16);
         //
@@ -332,6 +399,7 @@ public class Load_Settings_Frame extends JDialog
                 AreasSettingsFrame areas_settings_frame = new AreasSettingsFrame();
                 areas_settings_frame.setVisible(true);
                 list_area.setListData(DisplayRelatedAreasInList());
+                ButtonSelectMetroEnabledByAreasCount();
             }
         });
         //
@@ -359,7 +427,18 @@ public class Load_Settings_Frame extends JDialog
         panel_salary.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel_salary.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 128));
         //
+        ButtonSelectMetroEnabledByAreasCount();
         button_select_metro.setFont(arial);
+        button_select_metro.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                MetroSettingsFrame metro_settings_frame = new MetroSettingsFrame(metro_area);
+                metro_settings_frame.setVisible(true);
+                list_metro.setListData(DisplayRelatedMetrosInList());
+            }
+        });
         ///////
         ButtonGroup button_group_experience = new ButtonGroup();
         button_group_experience.add(radio_btn_exprience_irrelvant);
@@ -497,12 +576,12 @@ public class Load_Settings_Frame extends JDialog
         list_area.setFont(arial);
         list_area.setVisibleRowCount(5);
         list_area.setEnabled(false);
-        //list_area.setListData(DisplayRelatedAreasInList());
+        list_area.setListData(DisplayRelatedAreasInList());
         //
         list_metro.setFont(arial);
         list_metro.setVisibleRowCount(5);
         list_metro.setEnabled(false);
-        //list_metro.setListData(DisplayRelatedProfAreasInList());
+        list_metro.setListData(DisplayRelatedMetrosInList());
         ///////
         label_time.setFont(arial);
         label_time.setBorder(BorderFactory.createEmptyBorder(0, 5, 85, 0));

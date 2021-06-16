@@ -22,6 +22,8 @@ public class MetroStation
     @JoinColumn(name = "line_ID")
     private MetroLine line;
 
+    // Возможно, нужно добавить поле Order - порядковый номер станции на линии
+
     public MetroStation() {}
 
     public MetroStation(int id, String name, MetroLine line)

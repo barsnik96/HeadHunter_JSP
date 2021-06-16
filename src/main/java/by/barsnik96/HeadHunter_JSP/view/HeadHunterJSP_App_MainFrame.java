@@ -92,7 +92,6 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     /// FUNCTIONS ///
     ///           ///
     File areas = null;
-
     {
         try {
             areas = ResourceUtils.getFile("D:\\nikita\\nikita_projects\\Projects\\Java\\HeadHunter_JSP\\src\\main\\resources\\areas.json");
@@ -875,8 +874,6 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         });
     }
 
-
-
     private void GetMetroStationsAndLines()
     {
         NetworkService.getInstance().getHeadHunterApi().getMetro().enqueue(new Callback<>() {
@@ -1088,24 +1085,28 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         int company_scopes_count = companyScopeService.companyScopeRepository.findAll().size();
         //
         int areas_count = areaService.areaRepository.findAll().size();
-        System.out.println(areas_count);
+        //
+        int metro_lines_count = metroLineService.metroLineRepository.findAll().size();
+        int metro_stations_count = metroStationService.metroStationRepository.findAll().size();
+        //
+        //
         //
         int sum_specializations_count = prof_areas_count + specializations_count;
         int sum_company_industries_count = company_industries_count + company_scopes_count;
+        int sum_metro_lines_metro_stations = metro_lines_count + metro_stations_count;
         //
         LoadingParameters.SetLoadingParametersArrayListsToNull(
                 prof_areas_count, specializations_count,
                 company_industries_count, company_scopes_count,
-                areas_count);
+                areas_count,
+                metro_lines_count, metro_stations_count);
         RequestParameters.SetRequestParametersArrayListsToNull(
                 sum_specializations_count,
                 sum_company_industries_count,
-                areas_count);
+                areas_count,
+                sum_metro_lines_metro_stations);
     }
 
-
-
-    // Проблема. Не обнуляются элементы (в частности города), если был выбран вышестоящий элемент
 
 
     /////// Диплом отчёт ///////
@@ -1137,13 +1138,19 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     // (+/-) Заполнение списков листов данными выбранными в других окнах из класса с параметрами окна
     // Заполнение параметров запроса из статического класса с параметрами
     // (+) Метод для загрузки JSON Areas, но уже для меню
-    //    наверное, стоит попробовать сохранять этот JSON в файл на диске, чтобы можно было загружать менюшки без Интернета
+    //    (+) наверное, стоит попробовать сохранять этот JSON в файл на диске, чтобы можно было загружать менюшки без Интернета
     // (+/-) Автогенерация окошек с меню из БД
     // Заполнение списка вакансий на основном меню - ListModel, ListRenderer
     // Вывод информации об отдельных вакансиях на панель фрейма - GridBagLayout
     // (+) Перерисовка окон с использованием данных, полученных из глобальных параметров из стат. класса
 
 
+    
+    // (+) Если выбрано больше 1 города, или город не выбран вообще, то выбор метро блокируется
+    // Если с выбором всё ок, кнопка разблокируется
+    // И показывается окошко с выбором линий и станций метро для этого города
+    // (+) Нужно добавить, чтобы получались только из указанного города
+    // (+) И нужна ещё проверка в главном окне настроек, есть ли для этого города метро
 
 
 
@@ -1384,7 +1391,8 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 //dispose(); // Выход
                 //GetProfAreasAndSpecializations();
                 //GetTestVacancy(44552119);
-                GetAreas();
+                //GetAreas();
+                GetMetroStationsAndLines();
                 //GetCompanyIndustriesAndCompanyScopes();
             }
         });
@@ -1415,6 +1423,10 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
 ///              ///
 
 
+///////
+// Проблема. Не обнуляются элементы (в частности города), если был выбран вышестоящий элемент
+// Решено. Из-за убирания индексов от цикла, получалось так, что
+// if постоянно проверял 1 и тот же элемент списка != null
 ///////
 // Найдена ещё 1 фича, которую нужно пофиксить.
 // Если в класс глоб. параметров уже были добавлены отдельные элементы списка

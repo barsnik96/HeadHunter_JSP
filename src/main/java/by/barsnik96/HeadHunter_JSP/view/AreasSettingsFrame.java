@@ -627,7 +627,7 @@ public class AreasSettingsFrame extends JDialog
         scroll_pane_areas.setViewportView(panel_areas);
         scroll_pane_areas.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scroll_pane_areas.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scroll_pane_areas.getVerticalScrollBar().setUnitIncrement(16);
+        scroll_pane_areas.getVerticalScrollBar().setUnitIncrement(32);
         ///////
         // Adding panels and set default borders
         getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -679,6 +679,15 @@ public class AreasSettingsFrame extends JDialog
     }
 }
 
+/*
+///////
+
+///////
+    // Если выбрали все элементы JList и не выбран Region, выбираем Region
+    // Если выбрали Region, и не выбраны все элементы JList, выбираем JList
+    //
+    // Если сняли выбор с Region, когда были выбраны все строки JList, то убираем все строки
+*/
 /// Deprecated ///
 /*
     public void on_actionPerformedClick_Region_JCheckBox(ActionEvent e)

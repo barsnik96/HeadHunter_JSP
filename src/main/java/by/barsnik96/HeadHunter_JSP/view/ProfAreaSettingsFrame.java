@@ -93,12 +93,6 @@ public class ProfAreaSettingsFrame extends JDialog
         }
     }
 
-    // Если выбрали все элементы JList и не выбран Region, выбираем Region
-    // Если выбрали Region, и не выбраны все элементы JList, выбираем JList
-    //
-    // Если сняли выбор с Region, когда были выбраны все строки JList, то убираем все строки
-
-
     private static ListCellRenderer<? super Specialization> createListRenderer() {
         return new DefaultListCellRenderer() {
             //private Color background = new Color(0, 100, 255, 15);
