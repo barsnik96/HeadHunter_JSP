@@ -13,8 +13,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Rectangle2D;
-import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class MetroSettingsFrame extends JDialog
@@ -91,10 +89,8 @@ public class MetroSettingsFrame extends JDialog
         }
     }
 
-    private static ListCellRenderer<? super MetroStation> createListRenderer() {
+    private static ListCellRenderer<? super MetroStation> createListRenderer(Color metro_line_color) {
         return new DefaultListCellRenderer() {
-            //private Color background = new Color(0, 100, 255, 15);
-            //private Color defaultBackground = (Color) UIManager.get("List.background");
 
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
@@ -105,23 +101,14 @@ public class MetroSettingsFrame extends JDialog
                     JLabel label = (JLabel) c;
                     MetroStation metro_station = (MetroStation) value;
                     label.setText(metro_station.getName());
-
-                    Color metro_station_color = new Color(145, 81, 51, 100);
-                    //metro_station.getLine().getLineColor();
-
+                    //
                     Icon icon_metro_line_color = new Icon() {
                         @Override
                         public void paintIcon(Component c, Graphics g, int x, int y) {
                             Graphics2D g2d = ( Graphics2D ) g;
                             //g2d.setRenderingHint ( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
-
-                            java.awt.geom.Area circle = new java.awt.geom.Area(new Ellipse2D.Double ( 10, 5, 10, 10 ));
-
-                            java.awt.geom.Area rectangle = new java.awt.geom.Area(new Rectangle2D.Double(0, 0,
-                                    label.getPreferredSize().width, label.getPreferredSize().height));
-                            g2d.setPaint(metro_station_color);
-
-                            //g2d.fill(rectangle);
+                            java.awt.geom.Area circle = new java.awt.geom.Area(new Ellipse2D.Double ( 10, 4, 10, 10 ));
+                            g2d.setPaint(metro_line_color);
                             g2d.fill(circle);
                         }
 
@@ -135,13 +122,8 @@ public class MetroSettingsFrame extends JDialog
                             return 0;
                         }
                     };
-
-                    //label.setIcon( UIManager.getIcon("Tree.closedIcon") );
-                    label.setIcon( icon_metro_line_color );
+                    label.setIcon(icon_metro_line_color);
                     label.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 5));
-                    //if (!isSelected) {
-                    //    label.setBackground(index % 2 == 0 ? background : defaultBackground);
-                    //}
                 }
                 return c;
             }
@@ -178,7 +160,8 @@ public class MetroSettingsFrame extends JDialog
             lists_metro_stations.add(i, new JList<>(metro_stations.toArray(new MetroStation[metro_stations.size()])));
             // Настраиваем параметры JList<MetroStation>
             lists_metro_stations.get(i).setFont(arial);
-            lists_metro_stations.get(i).setCellRenderer(createListRenderer());
+            // Цвет получаем из MetroLine, затем декодируем из HEX в RGB
+            lists_metro_stations.get(i).setCellRenderer(createListRenderer(Color.decode(metro_line.getColor())));
             lists_metro_stations.get(i).setSelectedIndex(-1);
             lists_metro_stations.get(i).setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
             lists_metro_stations.get(i).addListSelectionListener(this::valueChanged_MetroStation_JList);
@@ -232,7 +215,7 @@ public class MetroSettingsFrame extends JDialog
             if (check_boxes_metro_lines.get(i).isSelected())
             {
                 // обновляем глобальные параметры окна
-                LoadingParameters.metro_lines_names.set(i, metro_lines.get(i).getName());
+                LoadingParameters.metro_lines_names.set(i, metro_lines.get(i).getName() + "_" + metro_lines.get(i).getColor());
                 // обновляем глобальные параметры запроса
                 RequestParameters.metro_ids.set(i, (double) metro_lines.get(i).getId());
             }
@@ -264,7 +247,8 @@ public class MetroSettingsFrame extends JDialog
                     //
                     // обновляем глобальные параметры окна
                     LoadingParameters.metro_stations_names.set(counter_for_loading_parameters + indices[j],
-                            list.getModel().getElementAt(indices[j]).getName());
+                            list.getModel().getElementAt(indices[j]).getName()
+                                    + "_" + list.getModel().getElementAt(indices[j]).getLine().getColor());
                     // обновляем глобальные параметры запроса
                     RequestParameters.metro_ids.set(counter_for_request_parameters + indices[j],
                             Double.valueOf(metro_lines.get(i).getId() + "." + list.getModel().getElementAt(indices[j]).getId()));

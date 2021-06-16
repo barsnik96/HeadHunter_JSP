@@ -93,7 +93,6 @@ public class AreasSettingsFrame extends JDialog
     }
 
 
-
     public void on_actionPerformedClick_Region_JCheckBox(ActionEvent e)
     {
         JCheckBox checkBox = (JCheckBox) e.getSource();
@@ -114,21 +113,6 @@ public class AreasSettingsFrame extends JDialog
             }
         }
     }
-
-
-    // На клик Region будем добавлять/снимать выбор со всех элементов JList City
-
-    // На stateChanged Region isSelected == false снимаем выбор со связанного JCheckBox Country
-    // (здесь даже вычислять ничего больше не нужно, т.к. он по любому должен быть снят)
-
-    // На stateChanged Region isSelected == true
-    //
-    // (для случаев когда выбор приходит от JCheckBox Country) выбираем все строки в JList City - это обработка в Country value changed
-    // (если выбраны все Region для данной Country) - то выбираем Country
-
-    // И нужно разобраться с этим -1 при добавлении элементов JList
-    // Возможно, мы неправильно считаем все размеры ArrayList, оттого и все баги
-
 
     private void on_itemStateChanged_Region_JCheckBox(ItemEvent e)
     {
@@ -175,7 +159,6 @@ public class AreasSettingsFrame extends JDialog
     }
 
 
-
     public void on_valueChanged_City_JList(ListSelectionEvent e)
     {
         JList<Area> list = (JList<Area>) e.getSource();
@@ -206,7 +189,6 @@ public class AreasSettingsFrame extends JDialog
             }
         }
     }
-
 
 
     private static ListCellRenderer<? super Area> createListRenderer() {
@@ -330,7 +312,7 @@ public class AreasSettingsFrame extends JDialog
                     constraints.gridx = 0;
                     constraints.gridy = gridy;
                     gridy++;
-                    constraints.insets = new Insets(0, 0, 10, 0);
+                    constraints.insets = new Insets(0, 40, 10, 0);
                     // Размещаем JCheckBox на панели
                     panel_areas.add(check_boxes_regions_for_related_country.get(j), constraints);
                     // Для заполнения JList<Area>
@@ -365,7 +347,7 @@ public class AreasSettingsFrame extends JDialog
                     constraints.gridx = 0;
                     constraints.gridy = gridy;
                     gridy++;
-                    constraints.insets = new Insets(0, 20, 10, 0);
+                    constraints.insets = new Insets(0, 60, 10, 0);
                     // Размещаем JList<Area> на панели
                     panel_areas.add(lists_cities_for_related_country.get(j), constraints);
                 }
@@ -471,10 +453,6 @@ public class AreasSettingsFrame extends JDialog
             }
         }
     }
-
-
-
-
 
     private void UpdateParameters()
     {
@@ -607,10 +585,6 @@ public class AreasSettingsFrame extends JDialog
         }
     }
 
-
-
-
-
     public AreasSettingsFrame()
     {
         setTitle("Select CompanyIndustries");
@@ -642,8 +616,6 @@ public class AreasSettingsFrame extends JDialog
         try
         {
             CreateGUI();
-            //SQLException ex = new SQLException();
-            //throw ex;
         }
         catch (SQLException sql_ex) {}
         //
@@ -681,7 +653,18 @@ public class AreasSettingsFrame extends JDialog
 
 /*
 ///////
+    // На клик Region будем добавлять/снимать выбор со всех элементов JList City
 
+    // На stateChanged Region isSelected == false снимаем выбор со связанного JCheckBox Country
+    // (здесь даже вычислять ничего больше не нужно, т.к. он по любому должен быть снят)
+
+    // На stateChanged Region isSelected == true
+    //
+    // (для случаев когда выбор приходит от JCheckBox Country) выбираем все строки в JList City - это обработка в Country value changed
+    // (если выбраны все Region для данной Country) - то выбираем Country
+
+    // И нужно разобраться с этим -1 при добавлении элементов JList
+    // Возможно, мы неправильно считаем все размеры ArrayList, оттого и все баги
 ///////
     // Если выбрали все элементы JList и не выбран Region, выбираем Region
     // Если выбрали Region, и не выбраны все элементы JList, выбираем JList

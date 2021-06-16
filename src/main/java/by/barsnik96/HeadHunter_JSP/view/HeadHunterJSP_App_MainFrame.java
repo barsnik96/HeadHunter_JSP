@@ -911,6 +911,9 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                                     metro_line.setName(line_json
                                             .get("name")
                                             .getAsString());
+                                    metro_line.setColor("#" + line_json
+                                            .get("hex_color")
+                                            .getAsString());
                                     metro_line.setArea(city);
                                     // save
                                     metroLineService.metroLineRepository.save(metro_line);
@@ -942,6 +945,9 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                                         metro_station.setName(station_json
                                                 .get("name")
                                                 .getAsString());
+                                        metro_station.setOrder(station_json
+                                                .get("order")
+                                                .getAsInt());
                                         metro_station.setLine(metro_line);
                                         // save
                                         metroStationService.metroStationRepository.save(metro_station);
@@ -1042,8 +1048,6 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             }
         });
     }
-
-
 
     private void GetTestVacancy(int id)
     {
@@ -1389,11 +1393,11 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 //
                 //TestSave(test_address);
                 //dispose(); // Выход
-                //GetProfAreasAndSpecializations();
                 //GetTestVacancy(44552119);
+                //GetProfAreasAndSpecializations();
+                //GetCompanyIndustriesAndCompanyScopes();
                 //GetAreas();
                 GetMetroStationsAndLines();
-                //GetCompanyIndustriesAndCompanyScopes();
             }
         });
         panel_south_west.add(btn_load);

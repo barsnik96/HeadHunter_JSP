@@ -11,4 +11,6 @@ import java.util.List;
 public interface MetroStationRepository extends JpaRepository<MetroStation, Integer>
 {
     List<MetroStation> findAllByLine(MetroLine metro_line);
+
+    MetroStation findOneByName(String name);
 }

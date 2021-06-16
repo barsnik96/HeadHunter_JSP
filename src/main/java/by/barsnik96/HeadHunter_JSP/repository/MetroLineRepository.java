@@ -12,4 +12,6 @@ import java.util.List;
 public interface MetroLineRepository extends JpaRepository<MetroLine, Integer>
 {
     List<MetroLine> findAllByArea(Area area);
+
+    MetroLine findOneByName(String name);
 }

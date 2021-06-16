@@ -18,18 +18,20 @@ public class MetroStation
     @Column(name = "station_name")
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @Column(name = "station_order")
+    private int order;
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "line_ID")
     private MetroLine line;
 
-    // Возможно, нужно добавить поле Order - порядковый номер станции на линии
-
     public MetroStation() {}
 
-    public MetroStation(int id, String name, MetroLine line)
+    public MetroStation(int id, String name, int order, MetroLine line)
     {
         this.id = id;
         this.name = name;
+        this.order = order;
         this.line = line;
     }
 }

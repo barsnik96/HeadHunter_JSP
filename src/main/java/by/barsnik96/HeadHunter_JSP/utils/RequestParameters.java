@@ -12,7 +12,7 @@ public class RequestParameters
     public static void SetRequestParametersArrayListsToNull(int sum_specializations_count,
                                                             int sum_company_industries_count,
                                                             int areas_count,
-                                                            int metro_count)
+                                                            int sum_metro_count)
     {
         for (int i = 0; i < sum_specializations_count; i++)
         {
@@ -32,7 +32,7 @@ public class RequestParameters
         }
         //
         //
-        for (int i = 0; i < metro_count; i++)
+        for (int i = 0; i < sum_metro_count; i++)
         {
             RequestParameters.metro_ids.add(i, null);
         }

@@ -1,7 +1,10 @@
 package by.barsnik96.HeadHunter_JSP.view;
 
 import by.barsnik96.HeadHunter_JSP.domain.Area;
+import by.barsnik96.HeadHunter_JSP.domain.MetroLine;
+import by.barsnik96.HeadHunter_JSP.domain.MetroStation;
 import by.barsnik96.HeadHunter_JSP.service.MetroLineServiceImpl;
+import by.barsnik96.HeadHunter_JSP.service.MetroStationServiceImpl;
 import by.barsnik96.HeadHunter_JSP.utils.BeanProvider;
 import by.barsnik96.HeadHunter_JSP.utils.DatabaseListModel;
 import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
@@ -14,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.geom.Ellipse2D;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -105,6 +109,7 @@ public class Load_Settings_Frame extends JDialog
     private JList<String> list_metro = new JList<>(array);
     //
     private MetroLineServiceImpl metroLineService;
+    private MetroStationServiceImpl metroStationService;
     //
     private Area metro_area = new Area();
 
@@ -180,7 +185,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.prof_areas_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                prof_areas_n_specializations.add(LoadingParameters.prof_areas_names.get(i)); // + " :: " + i
+                prof_areas_n_specializations.add(LoadingParameters.prof_areas_names.get(i));
             }
         }
         for (int i = 0; i < LoadingParameters.specializations_names.size(); i++)
@@ -189,7 +194,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.specializations_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                prof_areas_n_specializations.add(LoadingParameters.specializations_names.get(i)); // + " :: " + i
+                prof_areas_n_specializations.add(LoadingParameters.specializations_names.get(i));
             }
         }
         return prof_areas_n_specializations.toArray(new String[prof_areas_n_specializations.size()]);
@@ -204,7 +209,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.company_industries_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                company_industries_n_company_scopes.add(LoadingParameters.company_industries_names.get(i)); // + " :: " + i
+                company_industries_n_company_scopes.add(LoadingParameters.company_industries_names.get(i));
             }
         }
         for (int i = 0; i < LoadingParameters.company_scopes_names.size(); i++)
@@ -213,7 +218,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.company_scopes_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                company_industries_n_company_scopes.add(LoadingParameters.company_scopes_names.get(i)); // + " :: " + i
+                company_industries_n_company_scopes.add(LoadingParameters.company_scopes_names.get(i));
             }
         }
         return company_industries_n_company_scopes.toArray(new String[company_industries_n_company_scopes.size()]);
@@ -228,7 +233,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.areas_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                areas.add(LoadingParameters.areas_names.get(i)); // + " :: " + i
+                areas.add(LoadingParameters.areas_names.get(i));
             }
         }
         return areas.toArray(new String[areas.size()]);
@@ -243,7 +248,7 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.metro_lines_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                metro_lines_n_metro_stations.add(LoadingParameters.metro_lines_names.get(i)); // + " :: " + i
+                metro_lines_n_metro_stations.add("лин. " + LoadingParameters.metro_lines_names.get(i));
             }
         }
         for (int i = 0; i < LoadingParameters.metro_stations_names.size(); i++)
@@ -252,15 +257,17 @@ public class Load_Settings_Frame extends JDialog
             if (LoadingParameters.metro_stations_names.get(i) != null)
             {
                 // Добавляем ненулевые в конец ArrayList
-                metro_lines_n_metro_stations.add(LoadingParameters.metro_stations_names.get(i)); // + " :: " + i
+                metro_lines_n_metro_stations.add("ст. " + LoadingParameters.metro_stations_names.get(i));
             }
         }
         return metro_lines_n_metro_stations.toArray(new String[metro_lines_n_metro_stations.size()]);
     }
 
+
+
     private void ButtonSelectMetroEnabledByAreasCount()
     {
-        // Если выбран только 1 Area
+        // Если выбрана только 1 Area
         if (list_area.getModel().getSize() == 1)
         {
             for (int i = 0; i < LoadingParameters.areas_names.size(); i++)
@@ -285,9 +292,91 @@ public class Load_Settings_Frame extends JDialog
         else // Если выбрано 0 (при первом открытии окна), или больше 1
         {
             button_select_metro.setEnabled(false);
+            // И нужно очистить статические параметры с именами линий и станций
+            // Т.к. всё равно их нельзя выбрать для 0 или >1 городов
+
+            for (int i = 0; i < LoadingParameters.metro_lines_names.size(); i++)
+            {
+                LoadingParameters.metro_lines_names.set(i, null);
+            }
+            for (int i = 0; i < LoadingParameters.metro_stations_names.size(); i++)
+            {
+                LoadingParameters.metro_stations_names.set(i, null);
+            }
+            // И id тоже
+            for (int i = 0; i < RequestParameters.metro_ids.size(); i++)
+            {
+                RequestParameters.metro_ids.set(i, null);
+            }
+            // И выставить модель данных в 0
+            list_metro.setListData(DisplayRelatedMetrosInList());
         }
     }
 
+
+
+    private static ListCellRenderer<? super String> createListRenderer() {
+        return new DefaultListCellRenderer() {
+
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (c instanceof JLabel)
+                {
+                    JLabel label = (JLabel) c;
+                    String metro_name_n_color = (String) value;
+                    Color metro_station_color = new Color(255, 255, 255, 255);
+                    // Распарсим String, отделив имя от цвета
+                    try
+                    {
+                        String[] data = metro_name_n_color.split("_");
+                        // Имя
+                        label.setText(data[0]);
+                        // Цвет
+                        metro_station_color = Color.decode(data[1]);
+                    }
+                    catch (NullPointerException nullPointerException)
+                    {
+                        // Если что-то пойдёт не так
+                        //
+                        // Стокорое имя
+                        metro_name_n_color = (String) value;
+                        // Стоковый цвет
+                        metro_station_color = new Color(255, 255, 255, 255);
+                    }
+                    // Final Color
+                    Color final_metro_station_color = metro_station_color;
+                    //
+                    //
+                    Icon icon_metro_line_color = new Icon() {
+                        @Override
+                        public void paintIcon(Component c, Graphics g, int x, int y) {
+                            Graphics2D g2d = ( Graphics2D ) g;
+                            //g2d.setRenderingHint ( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                            java.awt.geom.Area circle = new java.awt.geom.Area(new Ellipse2D.Double ( 10, 4, 10, 10 ));
+                            g2d.setPaint(final_metro_station_color);
+                            g2d.fill(circle);
+                        }
+
+                        @Override
+                        public int getIconWidth() {
+                            return 0;
+                        }
+
+                        @Override
+                        public int getIconHeight() {
+                            return 0;
+                        }
+                    };
+                    label.setIcon(icon_metro_line_color);
+                    label.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 5));
+                    label.setOpaque(true);
+                }
+                return c;
+            }
+        };
+    }
 
     public Load_Settings_Frame()
     {
@@ -309,6 +398,7 @@ public class Load_Settings_Frame extends JDialog
         // Services autowiring
         BeanProvider.autowire(this);
         this.metroLineService = BeanProvider.applicationContext.getBean(MetroLineServiceImpl.class);
+        this.metroStationService = BeanProvider.applicationContext.getBean(MetroStationServiceImpl.class);
         // Fonts settings
         Font arial = new Font("Arial", Font.PLAIN, 16);
         //
@@ -437,6 +527,7 @@ public class Load_Settings_Frame extends JDialog
                 MetroSettingsFrame metro_settings_frame = new MetroSettingsFrame(metro_area);
                 metro_settings_frame.setVisible(true);
                 list_metro.setListData(DisplayRelatedMetrosInList());
+                list_metro.setEnabled(true);
             }
         });
         ///////
@@ -565,23 +656,20 @@ public class Load_Settings_Frame extends JDialog
         ///////
         list_prof_area.setFont(arial);
         list_prof_area.setVisibleRowCount(5);
-        list_prof_area.setEnabled(false);
         list_prof_area.setListData(DisplayRelatedProfAreasInList());
         //
         list_company_industries_n_scope.setFont(arial);
         list_company_industries_n_scope.setVisibleRowCount(5);
-        list_company_industries_n_scope.setEnabled(false);
         list_company_industries_n_scope.setListData(DisplayRelatedCompanyIndustriesInList());
         //
         list_area.setFont(arial);
         list_area.setVisibleRowCount(5);
-        list_area.setEnabled(false);
         list_area.setListData(DisplayRelatedAreasInList());
         //
         list_metro.setFont(arial);
         list_metro.setVisibleRowCount(5);
-        list_metro.setEnabled(false);
         list_metro.setListData(DisplayRelatedMetrosInList());
+        list_metro.setCellRenderer(createListRenderer());
         ///////
         label_time.setFont(arial);
         label_time.setBorder(BorderFactory.createEmptyBorder(0, 5, 85, 0));
