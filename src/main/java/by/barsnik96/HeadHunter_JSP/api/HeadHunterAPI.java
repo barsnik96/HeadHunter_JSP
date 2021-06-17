@@ -2,12 +2,10 @@ package by.barsnik96.HeadHunter_JSP.api;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public interface HeadHunterAPI
 {
@@ -18,10 +16,15 @@ public interface HeadHunterAPI
     Call<JsonObject> getVacancyByUrl(@Url String url);
 
     @GET("vacancies/")
-    Call<JsonObject> getVacancies(@Query("text") String text, @Query("per_page") String per_page, @Query("page") String page,
-                                  @Query("specialization") ArrayList<Double> specializations, @Query("area") String area,
-                                  @Query("currency_code") String currency_code, @Query("salary") String salary, @Query("only_with_salary") String only_with_salary,
-                                  @Query("experience") String experience, @Query("employment") String employment, @Query("schedule") String schedule);
+    Call<JsonObject> getVacancies(@Query("text") String text,
+                                  @Query("specialization") ArrayList<Double> specialization, @Query("industry") ArrayList<Double> industry,
+                                  @Query("area") ArrayList<Integer> area, @Query("metro") ArrayList<Double> metro,
+                                  @Query("salary") String salary, @Query("currency_code") String currency_code, @Query("only_with_salary") String only_with_salary,
+                                  @Query("experience") String experience,
+                                  @Query("employment") ArrayList<String> employment,
+                                  @Query("schedule") ArrayList<String> schedule,
+                                  @Query("order_by") String order_by, @Query("search_period") String time,
+                                  @Query("per_page") String per_page, @Query("page") String page);
 
     @GET
     Call<JsonObject> getEmployerByUrl(@Url String url);

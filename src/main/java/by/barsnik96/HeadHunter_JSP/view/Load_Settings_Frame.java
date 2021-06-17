@@ -1,24 +1,17 @@
 package by.barsnik96.HeadHunter_JSP.view;
 
 import by.barsnik96.HeadHunter_JSP.domain.Area;
-import by.barsnik96.HeadHunter_JSP.domain.MetroLine;
-import by.barsnik96.HeadHunter_JSP.domain.MetroStation;
 import by.barsnik96.HeadHunter_JSP.service.MetroLineServiceImpl;
 import by.barsnik96.HeadHunter_JSP.service.MetroStationServiceImpl;
 import by.barsnik96.HeadHunter_JSP.utils.BeanProvider;
-import by.barsnik96.HeadHunter_JSP.utils.DatabaseListModel;
 import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
 import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
-import java.sql.*;
 import java.util.ArrayList;
-
-import static javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION;
 
 public class Load_Settings_Frame extends JDialog
 {
@@ -519,7 +512,7 @@ public class Load_Settings_Frame extends JDialog
                 // Ищем какой именно это Area
                 if (list_area.getModel().getElementAt(0) == LoadingParameters.areas_names.get(i))
                 {
-                    metro_area.setId(RequestParameters.areas_ids.get(i).intValue());
+                    metro_area.setId(RequestParameters.areas_ids.get(i));
                     metro_area.setName(LoadingParameters.areas_names.get(i));
                     // И для этого Area есть метро
                     if (metroLineService.metroLineRepository.findAllByArea(metro_area).size() > 0)

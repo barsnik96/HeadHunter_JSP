@@ -6,7 +6,7 @@ public class RequestParameters
 {
     public static ArrayList<Double> specializations_ids = new ArrayList<Double>();
     public static ArrayList<Double> company_industries_ids = new ArrayList<Double>();
-    public static ArrayList<Double> areas_ids = new ArrayList<Double>();
+    public static ArrayList<Integer> areas_ids = new ArrayList<Integer>();
     public static ArrayList<Double> metro_ids = new ArrayList<Double>();
     public static String text;
     public static String currency_code;

@@ -473,7 +473,7 @@ public class AreasSettingsFrame extends JDialog
                 // обновляем глобальные параметры окна
                 LoadingParameters.areas_names.set(i, countries.get(i).getName());
                 // обновляем глобальные параметры запроса
-                RequestParameters.areas_ids.set(i, (double) countries.get(i).getId());
+                RequestParameters.areas_ids.set(i, countries.get(i).getId());
                 //
                 // И нужно сбросить в null все связанные элементы - JCheckBox's Region, JList's City
                 //
@@ -521,7 +521,7 @@ public class AreasSettingsFrame extends JDialog
                                 regions.get(i).get(j).getName());
                         // обновляем глобальные параметры запроса
                         RequestParameters.areas_ids.set(j + (sum_all_prev_regions_sizes + countries.size()),
-                                (double) regions.get(i).get(j).getId());
+                                regions.get(i).get(j).getId());
                         // И нужно сбросить в null все связанные элементы
                         // JList's City
                         for (int k = 0; k < lists_cities.get(i).get(j).getModel().getSize(); k++)
@@ -553,7 +553,7 @@ public class AreasSettingsFrame extends JDialog
                                             + indices[k], list.getModel().getElementAt(indices[k]).getName());
                             // обновляем глобальные параметры запроса // было от j
                             RequestParameters.areas_ids.set((sum_all_prev_lists_sizes + countries.size() + regions_count)
-                                            + indices[k], Double.valueOf(list.getModel().getElementAt(indices[k]).getId()));
+                                            + indices[k], list.getModel().getElementAt(indices[k]).getId());
                         }
                         // Получаем невыбранные индексы и обновляем их в null
                         for (int k = 0; k < list.getModel().getSize(); k++)

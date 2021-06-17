@@ -54,10 +54,6 @@ public class Vacancy
     private Address address;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vacancy_metro_station")
-    private MetroStation metro_station;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vacancy_experience")
     private ExperienceType experience;
 
@@ -83,12 +79,6 @@ public class Vacancy
     private boolean accept_kids;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "vacancies_n_driver_license_types",
-            joinColumns = @JoinColumn(name = "vacancy_ID"),
-            inverseJoinColumns = @JoinColumn(name = "driver_license_ID"))
-    private Set<DriverLicense> driver_licenses;
-
-    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "vacancies_n_specializations",
             joinColumns = @JoinColumn(name = "vacancy_ID"),
             inverseJoinColumns = @JoinColumn(name = "specialization_ID"))
@@ -100,13 +90,27 @@ public class Vacancy
             inverseJoinColumns = @JoinColumn(name = "key_skill_ID"))
     private Set<KeySkill> key_skills;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "vacancies_n_metro_stations",
+            joinColumns = @JoinColumn(name = "vacancy_ID"),
+            inverseJoinColumns = @JoinColumn(name = "station_ID"))
+    private Set<MetroStation> metro_stations;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "vacancies_n_driver_license_types",
+            joinColumns = @JoinColumn(name = "vacancy_ID"),
+            inverseJoinColumns = @JoinColumn(name = "driver_license_ID"))
+    private Set<DriverLicense> driver_licenses;
+
     public Vacancy() {}
 
     public Vacancy(int id, String name, String description, VacancyType type, Employer employer,
                    int salary_from, int salary_to, boolean salary_gross, Currency currency,
-                   Area area, Address address, MetroStation metro_station,
+                   Area area, Address address,
                    ExperienceType experience, EmploymentType employment, ScheduleType schedule,
-                   boolean archived, LocalDateTime published_at, boolean accept_handicapped, boolean accept_kids)
+                   boolean archived, LocalDateTime published_at, boolean accept_handicapped, boolean accept_kids,
+                   Set<Specialization> specializations, Set<KeySkill> key_skills,
+                   Set<MetroStation> metro_stations, Set<DriverLicense> driver_licenses)
     {
         this.id = id;
         this.name = name;
@@ -119,7 +123,6 @@ public class Vacancy
         this.currency = currency;
         this.area = area;
         this.address = address;
-        this.metro_station = metro_station;
         this.experience = experience;
         this.employment = employment;
         this.schedule = schedule;
@@ -127,5 +130,9 @@ public class Vacancy
         this.published_at = published_at;
         this.accept_handicapped = accept_handicapped;
         this.accept_kids = accept_kids;
+        this.specializations = specializations;
+        this.key_skills = key_skills;
+        this.metro_stations = metro_stations;
+        this.driver_licenses = driver_licenses;
     }
 }

@@ -28,7 +28,6 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -40,7 +39,7 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
 {
     private JPanel panel_north = new JPanel(); // Верхняя панель
     private JPanel panel_north_west = new JPanel(); // Левая верхняя панель для название приложения
-    private JPanel panel_north_east = new JPanel(); // Правая верхняя панель для кнопоу настроек
+    private JPanel panel_north_east = new JPanel(); // Правая верхняя панель для кнопок настроек
     //
     private JPanel panel_center = new JPanel(); // Центральная панель
     private JPanel panel_center_west = new JPanel(); // Левая центральная панель для вакансий
@@ -100,21 +99,645 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         }
     }
 
+    private void SetStaticClassesParametersToNull()
+    {
+        int prof_areas_count = profAreaService.profAreaRepository.findAll().size();
+        int specializations_count = specializationService.specializationRepository.findAll().size();
+        //
+        int company_industries_count = companyIndustryService.companyIndustryRepository.findAll().size();
+        int company_scopes_count = companyScopeService.companyScopeRepository.findAll().size();
+        //
+        int areas_count = areaService.areaRepository.findAll().size();
+        //
+        int metro_lines_count = metroLineService.metroLineRepository.findAll().size();
+        int metro_stations_count = metroStationService.metroStationRepository.findAll().size();
+        //
+        //
+        //
+        int sum_specializations_count = prof_areas_count + specializations_count;
+        int sum_company_industries_count = company_industries_count + company_scopes_count;
+        int sum_metro_lines_metro_stations = metro_lines_count + metro_stations_count;
+        //
+        LoadingParameters.SetLoadingParametersArrayListsToNull(
+                prof_areas_count, specializations_count,
+                company_industries_count, company_scopes_count,
+                areas_count,
+                metro_lines_count, metro_stations_count);
+        RequestParameters.SetRequestParametersArrayListsToNull(
+                sum_specializations_count,
+                sum_company_industries_count,
+                areas_count,
+                sum_metro_lines_metro_stations);
+    }
+
+
+
+    private void GetDictionaries()
+    {
+        NetworkService.getInstance().getHeadHunterApi().getDictionaries().enqueue(new Callback<>()
+        {
+            @Override
+            public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
+            {
+                if (response.isSuccessful())
+                {
+                    if(!response.body().isJsonNull())
+                    {
+                        JsonObject dictionaries_json = response.body().getAsJsonObject();
+                        //
+                        // VacancyType
+                        //
+                        JsonArray vacancy_type_array = dictionaries_json.get("vacancy_type").getAsJsonArray();
+                        for (int i = 0; i < vacancy_type_array.size(); i++)
+                        {
+                            JsonObject vacancy_type_json = vacancy_type_array.get(i).getAsJsonObject();
+                            if (!vacancyTypeService.vacancyTypeRepository
+                                    .existsById(vacancy_type_json
+                                            .get("id")
+                                            .getAsString())
+                            )
+                            {
+                                VacancyType vacancy_type = new VacancyType();
+                                //
+                                vacancy_type.setId(vacancy_type_json
+                                        .get("id")
+                                        .getAsString());
+                                vacancy_type.setName(vacancy_type_json
+                                        .get("name")
+                                        .getAsString());
+                                vacancyTypeService.vacancyTypeRepository.save(vacancy_type);
+                            }
+                        }
+                        //
+                        // Currency
+                        //
+                        JsonArray currency_array = dictionaries_json.get("currency").getAsJsonArray();
+                        for (int i = 0; i < currency_array.size(); i++)
+                        {
+                            JsonObject array_element = currency_array.get(i).getAsJsonObject();
+                            if (!currencyService.currencyRepository
+                                    .existsById(array_element
+                                            .get("code")
+                                            .getAsString())
+                            )
+                            {
+                                Currency currency = new Currency();
+                                //
+                                currency.setCode(array_element
+                                        .get("code")
+                                        .getAsString());
+                                currency.setAbbr(array_element
+                                        .get("abbr")
+                                        .getAsString());
+                                currency.setName(array_element
+                                        .get("name")
+                                        .getAsString());
+                                currency.setRate_to_rub(array_element
+                                        .get("rate")
+                                        .getAsDouble());
+                                currencyService.currencyRepository.save(currency);
+                            }
+                        }
+                        //
+                        // ExperienceType
+                        //
+                        JsonArray experience_array = dictionaries_json.get("experience").getAsJsonArray();
+                        for (int i = 0; i < experience_array.size(); i++)
+                        {
+                            JsonObject array_element = experience_array.get(i).getAsJsonObject();
+                            if (!experienceTypeService.experienceTypeRepository
+                                    .existsById(array_element
+                                            .get("id")
+                                            .getAsString())
+                            )
+                            {
+                                ExperienceType experience_type = new ExperienceType();
+                                //
+                                experience_type.setId(array_element
+                                        .get("id")
+                                        .getAsString());
+                                experience_type.setName(array_element
+                                        .get("name")
+                                        .getAsString());
+                                experienceTypeService.experienceTypeRepository.save(experience_type);
+                            }
+                        }
+                        //
+                        // EmploymentType
+                        //
+                        JsonArray employment_array = dictionaries_json.get("employment").getAsJsonArray();
+                        for (int i = 0; i < employment_array.size(); i++)
+                        {
+                            JsonObject array_element = employment_array.get(i).getAsJsonObject();
+                            if (!employmentTypeService.employmentTypeRepository
+                                    .existsById(array_element
+                                            .get("id")
+                                            .getAsString())
+                            )
+                            {
+                                EmploymentType employment_type = new EmploymentType();
+                                //
+                                employment_type.setId(array_element
+                                        .get("id")
+                                        .getAsString());
+                                employment_type.setName(array_element
+                                        .get("name")
+                                        .getAsString());
+                                employmentTypeService.employmentTypeRepository.save(employment_type);
+                            }
+                        }
+                        //
+                        // ScheduleType
+                        //
+                        JsonArray schedule_array = dictionaries_json.get("schedule").getAsJsonArray();
+                        for (int i = 0; i < schedule_array.size(); i++)
+                        {
+                            JsonObject array_element = schedule_array.get(i).getAsJsonObject();
+                            if (!scheduleTypeService.scheduleTypeRepository
+                                    .existsById(array_element
+                                            .get("id")
+                                            .getAsString())
+                            )
+                            {
+                                ScheduleType schedule_type = new ScheduleType();
+                                //
+                                schedule_type.setId(array_element
+                                        .get("id")
+                                        .getAsString());
+                                schedule_type.setName(array_element
+                                        .get("name")
+                                        .getAsString());
+                                scheduleTypeService.scheduleTypeRepository.save(schedule_type);
+                            }
+                        }
+                        //
+                        // DriverLicense
+                        //
+                        JsonArray driver_license_types_array = dictionaries_json.get("driver_license_types").getAsJsonArray();
+                        for (int i = 0; i < driver_license_types_array.size(); i++)
+                        {
+                            JsonObject array_element = driver_license_types_array.get(i).getAsJsonObject();
+                            if (!driverLicenseService.driverLicenseRepository
+                                    .existsById(array_element
+                                            .get("id")
+                                            .getAsString())
+                            )
+                            {
+                                DriverLicense driver_license = new DriverLicense();
+                                //
+                                driver_license.setId(array_element
+                                        .get("id")
+                                        .getAsString());
+                                driverLicenseService.driverLicenseRepository.save(driver_license);
+                            }
+                        }
+                    }
+                    System.out.println("Dictionaries from https://api.hh.ru/dictionaries loaded!");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting dictionaries!");
+                t.printStackTrace();
+            }
+        });
+    }
+
+    private void GetProfAreasAndSpecializations()
+    {
+        NetworkService.getInstance().getHeadHunterApi().getSpecializations().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response) {
+                if (response.isSuccessful())
+                {
+                    if (!response.body().isJsonNull())
+                    {
+                        JsonArray prof_areas_and_specializations_json = response.body().getAsJsonArray();
+                        for (int i = 0; i < prof_areas_and_specializations_json.size(); i++)
+                        {
+                            JsonObject prof_area_json = prof_areas_and_specializations_json.get(i).getAsJsonObject();
+                            //
+                            ProfArea prof_area = new ProfArea();
+                            //
+                            if (!profAreaService.profAreaRepository
+                                    .existsById(prof_area_json
+                                            .get("id")
+                                            .getAsInt())
+                            )
+                            {
+                                prof_area.setId(prof_area_json
+                                        .get("id")
+                                        .getAsInt());
+                                prof_area.setName(prof_area_json
+                                        .get("name")
+                                        .getAsString());
+                                // save
+                                profAreaService.profAreaRepository.save(prof_area);
+                            }
+                            else
+                            {
+                                prof_area = profAreaService.profAreaRepository
+                                        .getOne(prof_area_json
+                                                .get("id")
+                                                .getAsInt());
+                            }
+                            //
+                            JsonArray specializations_json = prof_area_json.get("specializations").getAsJsonArray();
+                            for (int j = 0; j < specializations_json.size(); j++)
+                            {
+                                Specialization specialization = new Specialization();
+                                //
+                                JsonObject spec_json = specializations_json.get(j).getAsJsonObject();
+                                if (!specializationService.specializationRepository
+                                        .existsById(Integer.parseInt(spec_json
+                                                .get("id")
+                                                .getAsString()
+                                                .split("\\.")[1]))
+                                )
+                                {
+                                    specialization.setId(Integer.parseInt(spec_json
+                                            .get("id")
+                                            .getAsString()
+                                            .split("\\.")[1]));
+                                    specialization.setName(spec_json
+                                            .get("name")
+                                            .getAsString());
+                                    // set
+                                    specialization.setProfArea(prof_area);
+                                    // save
+                                    specializationService.specializationRepository.save(specialization);
+                                }
+                            }
+                        }
+                        System.out.println("ProfAreas and Specializations from https://api.hh.ru/specializations loaded!");
+                    }
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting ProfAreas and Specializations!");
+                t.printStackTrace();
+            }
+        });
+    }
+
+    private void GetCompanyIndustriesAndCompanyScopes()
+    {
+        NetworkService.getInstance().getHeadHunterApi().getIndustries().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
+            {
+                if (response.isSuccessful())
+                {
+                    if(!response.body().isJsonNull())
+                    {
+                        JsonArray industries_array = response.body().getAsJsonArray();
+                        //
+                        for (int i = 0; i < industries_array.size(); i++)
+                        {
+                            // CompanyIndustries level
+                            JsonObject company_industry_json = industries_array.get(i).getAsJsonObject();
+                            CompanyIndustry company_industry = new CompanyIndustry();
+                            //
+                            if (!companyIndustryService.companyIndustryRepository
+                                    .existsById(company_industry_json
+                                            .get("id")
+                                            .getAsInt())
+                            )
+                            {
+                                company_industry.setId(company_industry_json
+                                        .get("id")
+                                        .getAsInt());
+                                company_industry.setName(company_industry_json
+                                        .get("name")
+                                        .getAsString());
+                                // save
+                                companyIndustryService.companyIndustryRepository.save(company_industry);
+                            }
+                            else
+                            {
+                                company_industry = companyIndustryService.companyIndustryRepository
+                                        .getOne(company_industry_json
+                                                .get("id")
+                                                .getAsInt());
+                            }
+                            //
+                            JsonArray company_scopes_array = company_industry_json.get("industries").getAsJsonArray();
+                            for (int j = 0; j < company_scopes_array.size(); j++)
+                            {
+                                CompanyScope company_scope = new CompanyScope();
+                                //
+                                JsonObject company_scope_json = company_scopes_array.get(j).getAsJsonObject();
+                                if (!companyScopeService.companyScopeRepository
+                                        .existsById(Integer.parseInt(company_scope_json
+                                                .get("id")
+                                                .getAsString()
+                                                .split("\\.")[1]))
+                                )
+                                {
+                                    company_scope.setId(Integer.parseInt(company_scope_json
+                                            .get("id")
+                                            .getAsString()
+                                            .split("\\.")[1]));
+                                    company_scope.setName(company_scope_json
+                                            .get("name")
+                                            .getAsString());
+                                    // set
+                                    company_scope.setCompanyIndustry(company_industry);
+                                    // save
+                                    companyScopeService.companyScopeRepository.save(company_scope);
+                                }
+                            }
+                        }
+                        System.out.println("CompanyIndustries and CompanyScopes from https://api.hh.ru/industries loaded!");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting request!");
+                t.printStackTrace();
+            }
+        });
+    }
+
+    private void GetAreas()
+    {
+        NetworkService.getInstance().getHeadHunterApi().getAreas().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
+            {
+                if (response.isSuccessful())
+                {
+                    if(!response.body().isJsonNull())
+                    {
+                        JsonArray areas_array = response.body().getAsJsonArray();
+                        // Сохраняем Areas в файл areas.json
+                        try
+                        {
+                            Writer writer = new FileWriter(areas);
+                            JsonWriter json_writer = new JsonWriter(writer);
+                            //
+                            Gson gson = new GsonBuilder().create();
+                            gson.toJson(areas_array, json_writer);
+                            json_writer.close();
+                        } catch (IOException exception) {
+                            System.out.println("Ошибка при сохранении JsonArray с регионами в файл " + areas.getAbsolutePath());
+                            exception.printStackTrace();
+                        }
+                        System.out.println("JsonArray с регионами сохранён в файл " + areas.getAbsolutePath());
+                        //
+                        for (int i = 0; i < areas_array.size(); i++)
+                        {
+                            // Countries level
+                            JsonObject country_json = areas_array.get(i).getAsJsonObject();
+                            if (!areaService.areaRepository
+                                    .existsById(country_json
+                                            .get("id")
+                                            .getAsInt())
+                            )
+                            {
+                                Area country = new Area();
+                                country.setId(country_json
+                                        .get("id")
+                                        .getAsInt());
+                                country.setName(country_json
+                                        .get("name")
+                                        .getAsString());
+                                // save
+                                areaService.areaRepository.save(country);
+                            }
+                            // Regions level
+                            JsonArray region_array = country_json.get("areas").getAsJsonArray();
+                            for (int j = 0; j < region_array.size(); j++)
+                            {
+                                JsonObject region_json = region_array.get(j).getAsJsonObject();
+                                if (!areaService.areaRepository
+                                        .existsById(region_json
+                                                .get("id")
+                                                .getAsInt())
+                                )
+                                {
+                                    Area region = new Area();
+                                    region.setId(region_json
+                                            .get("id")
+                                            .getAsInt());
+                                    region.setName(region_json
+                                            .get("name")
+                                            .getAsString());
+                                    // save
+                                    areaService.areaRepository.save(region);
+                                }
+                                // Cities level
+                                JsonArray city_array = region_json.get("areas").getAsJsonArray();
+                                for (int k = 0; k < city_array.size(); k++)
+                                {
+                                    JsonObject city_json = city_array.get(k).getAsJsonObject();
+                                    if (!areaService.areaRepository
+                                            .existsById(city_json
+                                                    .get("id")
+                                                    .getAsInt())
+                                    )
+                                    {
+                                        Area city = new Area();
+                                        city.setId(city_json
+                                                .get("id")
+                                                .getAsInt());
+                                        city.setName(city_json
+                                                .get("name")
+                                                .getAsString());
+                                        areaService.areaRepository.save(city);
+                                    }
+                                }
+                            }
+                        }
+                        System.out.println("Areas from https://api.hh.ru/areas loaded!");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting Areas!");
+                t.printStackTrace();
+            }
+        });
+    }
+
+    private void GetMetroStationsAndLines()
+    {
+        NetworkService.getInstance().getHeadHunterApi().getMetro().enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
+            {
+                if (response.isSuccessful())
+                {
+                    if(!response.body().isJsonNull())
+                    {
+                        JsonArray metro_array = response.body().getAsJsonArray();
+                        for (int i = 0; i < metro_array.size(); i++)
+                        {
+                            // Cities level
+                            JsonObject city_json = metro_array.get(i).getAsJsonObject();
+                            Area city = areaService.areaRepository
+                                    .getOne(city_json
+                                            .get("id")
+                                            .getAsInt());
+                            // Lines level
+                            JsonArray lines_array = city_json.get("lines").getAsJsonArray();
+                            for (int j = 0; j < lines_array.size(); j++)
+                            {
+                                JsonObject line_json = lines_array.get(j).getAsJsonObject();
+                                MetroLine metro_line = new MetroLine();
+                                if (!metroLineService.metroLineRepository
+                                        .existsById(line_json
+                                                .get("id")
+                                                .getAsInt())
+                                )
+                                {
+                                    metro_line.setId(line_json
+                                            .get("id")
+                                            .getAsInt());
+                                    metro_line.setName(line_json
+                                            .get("name")
+                                            .getAsString());
+                                    metro_line.setColor("#" + line_json
+                                            .get("hex_color")
+                                            .getAsString());
+                                    metro_line.setArea(city);
+                                    // save
+                                    metroLineService.metroLineRepository.save(metro_line);
+                                }
+                                else
+                                {
+                                    metro_line = metroLineService.metroLineRepository
+                                            .getOne(line_json
+                                                    .get("id")
+                                                    .getAsInt());
+                                }
+                                // Stations level
+                                JsonArray stations_array = line_json.get("stations").getAsJsonArray();
+                                for (int k = 0; k < stations_array.size(); k++)
+                                {
+                                    JsonObject station_json = stations_array.get(k).getAsJsonObject();
+                                    MetroStation metro_station = new MetroStation();
+                                    if (!metroStationService.metroStationRepository
+                                            .existsById(Integer.parseInt(station_json
+                                                    .get("id")
+                                                    .getAsString()
+                                                    .split("\\.")[1]))
+                                    )
+                                    {
+                                        metro_station.setId(Integer.parseInt(station_json
+                                                .get("id")
+                                                .getAsString()
+                                                .split("\\.")[1]));
+                                        metro_station.setName(station_json
+                                                .get("name")
+                                                .getAsString());
+                                        metro_station.setOrder(station_json
+                                                .get("order")
+                                                .getAsInt());
+                                        metro_station.setLine(metro_line);
+                                        // save
+                                        metroStationService.metroStationRepository.save(metro_station);
+                                    }
+                                }
+                            }
+                        }
+                        System.out.println("MetroLines and MetroStations from https://api.hh.ru/metro loaded!");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting MetroLines and MetroStations!");
+                t.printStackTrace();
+            }
+        });
+    }
+
+
+
     private ArrayList<String> GetLinksToVacancies()
     {
-        // Потом вынесем добавление параметров через GUI
-        ArrayList<Double> data = new ArrayList<Double>();
-        data.add(8.77);
-        data.add(27.498);
+        ArrayList<Double> specialization = new ArrayList<Double>();
+        ArrayList<Double> industry = new ArrayList<Double>();
+        ArrayList<Integer> area = new ArrayList<Integer>();
+        ArrayList<Double> metro = new ArrayList<Double>();
+        ArrayList<String> employment = new ArrayList<String>();
+        ArrayList<String> schedule = new ArrayList<String>();
         //
-        // Добавить фильтр на ненулевые элементы списков
+        // Добавление параметров через стат. класс параметров RequestParameters
+        // Фильтруем на ненулевые элементы списков
         //
+        // !!! Также нужна проверка и заполнение параметров пустой строкой/стоковым значением
+        // на тот случай, если его не выбрали
+
+        // Specialization
+        for (int i = 0; i < RequestParameters.specializations_ids.size(); i++)
+        {
+            if (RequestParameters.specializations_ids.get(i) != null)
+            {
+                specialization.add(RequestParameters.specializations_ids.get(i));
+            }
+        }
+        // Industry
+        for (int i = 0; i < RequestParameters.company_industries_ids.size(); i++)
+        {
+            if (RequestParameters.company_industries_ids.get(i) != null)
+            {
+                industry.add(RequestParameters.company_industries_ids.get(i));
+            }
+        }
+        // Area
+        for (int i = 0; i < RequestParameters.areas_ids.size(); i++)
+        {
+            if (RequestParameters.areas_ids.get(i) != null)
+            {
+                area.add(RequestParameters.areas_ids.get(i));
+            }
+        }
+        // Metro
+        for (int i = 0; i < RequestParameters.metro_ids.size(); i++)
+        {
+            if (RequestParameters.metro_ids.get(i) != null)
+            {
+                metro.add(RequestParameters.metro_ids.get(i));
+            }
+        }
+        // Employment
+        for (int i = 0; i < RequestParameters.employment.size(); i++)
+        {
+            if (RequestParameters.employment.get(i) != null)
+            {
+                employment.add(RequestParameters.employment.get(i));
+            }
+        }
+        // Schedule
+        for (int i = 0; i < RequestParameters.schedule.size(); i++)
+        {
+            if (RequestParameters.schedule.get(i) != null)
+            {
+                schedule.add(RequestParameters.schedule.get(i));
+            }
+        }
         //
-        //
+        // Список ссылок на вакансии
         ArrayList<String> links_to_vacancies = new ArrayList<String>();
         //
-        NetworkService.getInstance().getHeadHunterApi().getVacancies("HR", "", "0", data, null,
-                null, null, null, null, null, null)
+        NetworkService.getInstance().getHeadHunterApi().getVacancies(
+                RequestParameters.text, specialization, industry, area, metro,
+                RequestParameters.salary, RequestParameters.currency_code, RequestParameters.only_with_salary,
+                RequestParameters.experience, employment, schedule,
+                "publication_time", RequestParameters.time, "20", "0")
                 .enqueue(new Callback<>()
                 {
                     @Override
@@ -146,6 +769,37 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     }
                 });
         return links_to_vacancies;
+    }
+
+    private JsonObject GetEmployerByUrl(String url)
+    {
+        final JsonObject[] employer_json = {new JsonObject()};
+        //
+        NetworkService.getInstance().getHeadHunterApi().getEmployerByUrl(url).enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
+            {
+                if (response.isSuccessful())
+                {
+                    if(response.body() != null)
+                    {
+                        employer_json[0] = response.body().getAsJsonObject();
+                    }
+                    else
+                    {
+                        employer_json[0] = null;
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t)
+            {
+                System.out.println("Error occurred while getting request!");
+                t.printStackTrace();
+            }
+        });
+        return employer_json[0];
     }
 
     private JsonObject GetVacancyJsonByUrl(String url)
@@ -191,19 +845,11 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     private void ParseAndSaveVacancyFromJson(JsonObject vacancy_json)
     {
         // Init all domain entity
-        VacancyType vacancy_type = new VacancyType();
         Employer employer = new Employer();
-        Currency currency = new Currency();
-        Area area = new Area();
         Address address = new Address();
-        MetroStation metro_station = new MetroStation();
-        MetroLine metro_line = new MetroLine();
-        ExperienceType experience_type = new ExperienceType();
-        EmploymentType employment_type = new EmploymentType();
-        ScheduleType schedule_type = new ScheduleType();
-        ProfArea prof_area = new ProfArea();
         Set<Specialization> specializations = new HashSet<Specialization>();
         Set<KeySkill> key_skills = new HashSet<KeySkill>();
+        Set<MetroStation> metro_stations = new HashSet<MetroStation>();
         Set<DriverLicense> driver_licenses = new HashSet<DriverLicense>();
         Set<CompanyScope> company_scopes = new HashSet<CompanyScope>();
         //
@@ -373,17 +1019,24 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         //
         if (!vacancy_json.get("address").getAsJsonObject().get("metro").isJsonNull())
         {
-            JsonObject metro_json = vacancy_json
+            JsonArray metro_stations_json = vacancy_json
                     .get("address")
                     .getAsJsonObject()
-                    .get("metro")
-                    .getAsJsonObject();
-            metroStationService.metroStationRepository
-                    .findById(Integer.parseInt(metro_json
-                            .get("station_id")
-                            .getAsString()
-                            .split("\\.")[1]))
-                    .ifPresent(vacancy::setMetro_station);
+                    .get("metro_stations")
+                    .getAsJsonArray();
+            for (int i = 0; i < metro_stations_json.size(); i++)
+            {
+                JsonObject array_element = metro_stations_json.get(i).getAsJsonObject();
+                // MetroLine - вернётся автоматически через связь
+                metroStationService.metroStationRepository
+                        .findById(Integer.parseInt(array_element
+                                .get("station_id")
+                                .getAsString()
+                                .split("\\.")[1]))
+                        .ifPresent(metro_stations::add);
+            }
+            // set
+            vacancy.setMetro_stations(metro_stations);
         }
         //
         // ExperienceType
@@ -489,567 +1142,7 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         // !!! где-то тут ещё нужно сохранить саму вакансию
     }
 
-    private JsonObject GetEmployerByUrl(String url)
-    {
-        final JsonObject[] employer_json = {new JsonObject()};
-        //
-        NetworkService.getInstance().getHeadHunterApi().getEmployerByUrl(url).enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
-            {
-                if (response.isSuccessful())
-                {
-                    if(response.body() != null)
-                    {
-                        employer_json[0] = response.body().getAsJsonObject();
-                    }
-                    else
-                    {
-                        employer_json[0] = null;
-                    }
-                }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-        return employer_json[0];
-    }
-
-    private void GetDictionaries()
-    {
-        NetworkService.getInstance().getHeadHunterApi().getDictionaries().enqueue(new Callback<>()
-        {
-            @Override
-            public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
-            {
-                if (response.isSuccessful())
-                {
-                    if(!response.body().isJsonNull())
-                    {
-                        JsonObject dictionaries_json = response.body().getAsJsonObject();
-                        //
-                        // VacancyType
-                        //
-                        JsonArray vacancy_type_array = dictionaries_json.get("vacancy_type").getAsJsonArray();
-                        for (int i = 0; i < vacancy_type_array.size(); i++)
-                        {
-                            JsonObject vacancy_type_json = vacancy_type_array.get(i).getAsJsonObject();
-                            if (!vacancyTypeService.vacancyTypeRepository
-                                    .existsById(vacancy_type_json
-                                            .get("id")
-                                            .getAsString())
-                            )
-                            {
-                                VacancyType vacancy_type = new VacancyType();
-                                //
-                                vacancy_type.setId(vacancy_type_json
-                                        .get("id")
-                                        .getAsString());
-                                vacancy_type.setName(vacancy_type_json
-                                        .get("name")
-                                        .getAsString());
-                                vacancyTypeService.vacancyTypeRepository.save(vacancy_type);
-                            }
-                        }
-                        //
-                        // Currency
-                        //
-                        JsonArray currency_array = dictionaries_json.get("currency").getAsJsonArray();
-                        for (int i = 0; i < currency_array.size(); i++)
-                        {
-                            JsonObject array_element = currency_array.get(i).getAsJsonObject();
-                            if (!currencyService.currencyRepository
-                                    .existsById(array_element
-                                            .get("code")
-                                            .getAsString())
-                            )
-                            {
-                                Currency currency = new Currency();
-                                //
-                                currency.setCode(array_element
-                                        .get("code")
-                                        .getAsString());
-                                currency.setAbbr(array_element
-                                        .get("abbr")
-                                        .getAsString());
-                                currency.setName(array_element
-                                        .get("name")
-                                        .getAsString());
-                                currency.setRate_to_rub(array_element
-                                        .get("rate")
-                                        .getAsDouble());
-                                currencyService.currencyRepository.save(currency);
-                            }
-                        }
-                        //
-                        // ExperienceType
-                        //
-                        JsonArray experience_array = dictionaries_json.get("experience").getAsJsonArray();
-                        for (int i = 0; i < experience_array.size(); i++)
-                        {
-                            JsonObject array_element = experience_array.get(i).getAsJsonObject();
-                            if (!experienceTypeService.experienceTypeRepository
-                                    .existsById(array_element
-                                            .get("id")
-                                            .getAsString())
-                            )
-                            {
-                                ExperienceType experience_type = new ExperienceType();
-                                //
-                                experience_type.setId(array_element
-                                        .get("id")
-                                        .getAsString());
-                                experience_type.setName(array_element
-                                        .get("name")
-                                        .getAsString());
-                                experienceTypeService.experienceTypeRepository.save(experience_type);
-                            }
-                        }
-                        //
-                        // EmploymentType
-                        //
-                        JsonArray employment_array = dictionaries_json.get("employment").getAsJsonArray();
-                        for (int i = 0; i < employment_array.size(); i++)
-                        {
-                            JsonObject array_element = employment_array.get(i).getAsJsonObject();
-                            if (!employmentTypeService.employmentTypeRepository
-                                    .existsById(array_element
-                                            .get("id")
-                                            .getAsString())
-                            )
-                            {
-                                EmploymentType employment_type = new EmploymentType();
-                                //
-                                employment_type.setId(array_element
-                                        .get("id")
-                                        .getAsString());
-                                employment_type.setName(array_element
-                                        .get("name")
-                                        .getAsString());
-                                employmentTypeService.employmentTypeRepository.save(employment_type);
-                            }
-                        }
-                        //
-                        // ScheduleType
-                        //
-                        JsonArray schedule_array = dictionaries_json.get("schedule").getAsJsonArray();
-                        for (int i = 0; i < schedule_array.size(); i++)
-                        {
-                            JsonObject array_element = schedule_array.get(i).getAsJsonObject();
-                            if (!scheduleTypeService.scheduleTypeRepository
-                                    .existsById(array_element
-                                            .get("id")
-                                            .getAsString())
-                            )
-                            {
-                                ScheduleType schedule_type = new ScheduleType();
-                                //
-                                schedule_type.setId(array_element
-                                        .get("id")
-                                        .getAsString());
-                                schedule_type.setName(array_element
-                                        .get("name")
-                                        .getAsString());
-                                scheduleTypeService.scheduleTypeRepository.save(schedule_type);
-                            }
-                        }
-                        //
-                        // DriverLicense
-                        //
-                        JsonArray driver_license_types_array = dictionaries_json.get("driver_license_types").getAsJsonArray();
-                        for (int i = 0; i < driver_license_types_array.size(); i++)
-                        {
-                            JsonObject array_element = driver_license_types_array.get(i).getAsJsonObject();
-                            if (!driverLicenseService.driverLicenseRepository
-                                    .existsById(array_element
-                                            .get("id")
-                                            .getAsString())
-                            )
-                            {
-                                DriverLicense driver_license = new DriverLicense();
-                                //
-                                driver_license.setId(array_element
-                                        .get("id")
-                                        .getAsString());
-                                driverLicenseService.driverLicenseRepository.save(driver_license);
-                            }
-                        }
-                    }
-                    System.out.println("Dictionaries from https://api.hh.ru/specializations loaded!");
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void GetProfAreasAndSpecializations()
-    {
-        NetworkService.getInstance().getHeadHunterApi().getSpecializations().enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response) {
-                if (response.isSuccessful())
-                {
-                    if (!response.body().isJsonNull())
-                    {
-                        JsonArray prof_areas_and_specializations_json = response.body().getAsJsonArray();
-                        for (int i = 0; i < prof_areas_and_specializations_json.size(); i++)
-                        {
-                            JsonObject prof_area_json = prof_areas_and_specializations_json.get(i).getAsJsonObject();
-                            //
-                            ProfArea prof_area = new ProfArea();
-                            //
-                            if (!profAreaService.profAreaRepository
-                                    .existsById(prof_area_json
-                                            .get("id")
-                                            .getAsInt())
-                            )
-                            {
-                                prof_area.setId(prof_area_json
-                                        .get("id")
-                                        .getAsInt());
-                                prof_area.setName(prof_area_json
-                                        .get("name")
-                                        .getAsString());
-                                // save
-                                profAreaService.profAreaRepository.save(prof_area);
-                            }
-                            else
-                            {
-                                prof_area = profAreaService.profAreaRepository
-                                        .getOne(prof_area_json
-                                                .get("id")
-                                                .getAsInt());
-                            }
-                            //
-                            JsonArray specializations_json = prof_area_json.get("specializations").getAsJsonArray();
-                            for (int j = 0; j < specializations_json.size(); j++)
-                            {
-                                Specialization specialization = new Specialization();
-                                //
-                                JsonObject spec_json = specializations_json.get(j).getAsJsonObject();
-                                if (!specializationService.specializationRepository
-                                        .existsById(Integer.parseInt(spec_json
-                                                .get("id")
-                                                .getAsString()
-                                                .split("\\.")[1]))
-                                )
-                                {
-                                    specialization.setId(Integer.parseInt(spec_json
-                                            .get("id")
-                                            .getAsString()
-                                            .split("\\.")[1]));
-                                    specialization.setName(spec_json
-                                            .get("name")
-                                            .getAsString());
-                                    // set
-                                    specialization.setProfArea(prof_area);
-                                    // save
-                                    specializationService.specializationRepository.save(specialization);
-                                }
-                            }
-                        }
-                        System.out.println("ProfAreas and Specializations from https://api.hh.ru/specializations loaded!");
-                    }
-                }
-            }
-            @Override
-            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void GetAreas()
-    {
-        NetworkService.getInstance().getHeadHunterApi().getAreas().enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
-            {
-                if (response.isSuccessful())
-                {
-                    if(!response.body().isJsonNull())
-                    {
-                        JsonArray areas_array = response.body().getAsJsonArray();
-                        // Сохраняем Areas в файл areas.json
-                        //File areas = null;
-
-                        try
-                        {
-                            Writer writer = new FileWriter(areas);
-                            JsonWriter json_writer = new JsonWriter(writer);
-                            //
-                            Gson gson = new GsonBuilder().create();
-                            gson.toJson(areas_array, json_writer);
-                            json_writer.close();
-                        } catch (IOException exception) {
-                            System.out.println("Ошибка при сохранении JsonArray с регионами в файл " + areas.getAbsolutePath());
-                            exception.printStackTrace();
-                        }
-                        System.out.println("JsonArray с регионами сохранён в файл " + areas.getAbsolutePath());
-                        //
-                        for (int i = 0; i < areas_array.size(); i++)
-                        {
-                            // Countries level
-                            JsonObject country_json = areas_array.get(i).getAsJsonObject();
-                            if (!areaService.areaRepository
-                                    .existsById(country_json
-                                            .get("id")
-                                            .getAsInt())
-                            )
-                            {
-                                Area country = new Area();
-                                country.setId(country_json
-                                        .get("id")
-                                        .getAsInt());
-                                country.setName(country_json
-                                        .get("name")
-                                        .getAsString());
-                                // save
-                                areaService.areaRepository.save(country);
-                            }
-                            // Regions level
-                            JsonArray region_array = country_json.get("areas").getAsJsonArray();
-                            for (int j = 0; j < region_array.size(); j++)
-                            {
-                                JsonObject region_json = region_array.get(j).getAsJsonObject();
-                                if (!areaService.areaRepository
-                                        .existsById(region_json
-                                                .get("id")
-                                                .getAsInt())
-                                )
-                                {
-                                    Area region = new Area();
-                                    region.setId(region_json
-                                            .get("id")
-                                            .getAsInt());
-                                    region.setName(region_json
-                                            .get("name")
-                                            .getAsString());
-                                    // save
-                                    areaService.areaRepository.save(region);
-                                }
-                                // Cities level
-                                JsonArray city_array = region_json.get("areas").getAsJsonArray();
-                                for (int k = 0; k < city_array.size(); k++)
-                                {
-                                    JsonObject city_json = city_array.get(k).getAsJsonObject();
-                                    if (!areaService.areaRepository
-                                            .existsById(city_json
-                                                    .get("id")
-                                                    .getAsInt())
-                                    )
-                                    {
-                                        Area city = new Area();
-                                        city.setId(city_json
-                                                .get("id")
-                                                .getAsInt());
-                                        city.setName(city_json
-                                                .get("name")
-                                                .getAsString());
-                                        areaService.areaRepository.save(city);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void GetMetroStationsAndLines()
-    {
-        NetworkService.getInstance().getHeadHunterApi().getMetro().enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
-            {
-                if (response.isSuccessful())
-                {
-                    if(!response.body().isJsonNull())
-                    {
-                        JsonArray metro_array = response.body().getAsJsonArray();
-                        for (int i = 0; i < metro_array.size(); i++)
-                        {
-                            // Cities level
-                            JsonObject city_json = metro_array.get(i).getAsJsonObject();
-                            Area city = areaService.areaRepository
-                                    .getOne(city_json
-                                            .get("id")
-                                            .getAsInt());
-                            // Lines level
-                            JsonArray lines_array = city_json.get("lines").getAsJsonArray();
-                            for (int j = 0; j < lines_array.size(); j++)
-                            {
-                                JsonObject line_json = lines_array.get(j).getAsJsonObject();
-                                MetroLine metro_line = new MetroLine();
-                                if (!metroLineService.metroLineRepository
-                                        .existsById(line_json
-                                                .get("id")
-                                                .getAsInt())
-                                )
-                                {
-                                    metro_line.setId(line_json
-                                            .get("id")
-                                            .getAsInt());
-                                    metro_line.setName(line_json
-                                            .get("name")
-                                            .getAsString());
-                                    metro_line.setColor("#" + line_json
-                                            .get("hex_color")
-                                            .getAsString());
-                                    metro_line.setArea(city);
-                                    // save
-                                    metroLineService.metroLineRepository.save(metro_line);
-                                }
-                                else
-                                {
-                                    metro_line = metroLineService.metroLineRepository
-                                            .getOne(line_json
-                                                    .get("id")
-                                                    .getAsInt());
-                                }
-                                // Stations level
-                                JsonArray stations_array = line_json.get("stations").getAsJsonArray();
-                                for (int k = 0; k < stations_array.size(); k++)
-                                {
-                                    JsonObject station_json = stations_array.get(k).getAsJsonObject();
-                                    MetroStation metro_station = new MetroStation();
-                                    if (!metroStationService.metroStationRepository
-                                            .existsById(Integer.parseInt(station_json
-                                                    .get("id")
-                                                    .getAsString()
-                                                    .split("\\.")[1]))
-                                    )
-                                    {
-                                        metro_station.setId(Integer.parseInt(station_json
-                                                .get("id")
-                                                .getAsString()
-                                                .split("\\.")[1]));
-                                        metro_station.setName(station_json
-                                                .get("name")
-                                                .getAsString());
-                                        metro_station.setOrder(station_json
-                                                .get("order")
-                                                .getAsInt());
-                                        metro_station.setLine(metro_line);
-                                        // save
-                                        metroStationService.metroStationRepository.save(metro_station);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-    }
-
-    private void GetCompanyIndustriesAndCompanyScopes()
-    {
-        NetworkService.getInstance().getHeadHunterApi().getIndustries().enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<JsonArray> call, @NonNull Response<JsonArray> response)
-            {
-                if (response.isSuccessful())
-                {
-                    if(!response.body().isJsonNull())
-                    {
-                        JsonArray industries_array = response.body().getAsJsonArray();
-                        //
-                        for (int i = 0; i < industries_array.size(); i++)
-                        {
-                            // CompanyIndustries level
-                            JsonObject company_industry_json = industries_array.get(i).getAsJsonObject();
-                            CompanyIndustry company_industry = new CompanyIndustry();
-                            //
-                            if (!companyIndustryService.companyIndustryRepository
-                                    .existsById(company_industry_json
-                                            .get("id")
-                                            .getAsInt())
-                            )
-                            {
-                                company_industry.setId(company_industry_json
-                                        .get("id")
-                                        .getAsInt());
-                                company_industry.setName(company_industry_json
-                                        .get("name")
-                                        .getAsString());
-                                // save
-                                companyIndustryService.companyIndustryRepository.save(company_industry);
-                            }
-                            else
-                            {
-                                company_industry = companyIndustryService.companyIndustryRepository
-                                        .getOne(company_industry_json
-                                                .get("id")
-                                                .getAsInt());
-                            }
-                            //
-                            JsonArray company_scopes_array = company_industry_json.get("industries").getAsJsonArray();
-                            for (int j = 0; j < company_scopes_array.size(); j++)
-                            {
-                                CompanyScope company_scope = new CompanyScope();
-                                //
-                                JsonObject company_scope_json = company_scopes_array.get(j).getAsJsonObject();
-                                if (!companyScopeService.companyScopeRepository
-                                        .existsById(Integer.parseInt(company_scope_json
-                                                .get("id")
-                                                .getAsString()
-                                                .split("\\.")[1]))
-                                )
-                                {
-                                    company_scope.setId(Integer.parseInt(company_scope_json
-                                            .get("id")
-                                            .getAsString()
-                                            .split("\\.")[1]));
-                                    company_scope.setName(company_scope_json
-                                            .get("name")
-                                            .getAsString());
-                                    // set
-                                    company_scope.setCompanyIndustry(company_industry);
-                                    // save
-                                    companyScopeService.companyScopeRepository.save(company_scope);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<JsonArray> call, @NonNull Throwable t)
-            {
-                System.out.println("Error occurred while getting request!");
-                t.printStackTrace();
-            }
-        });
-    }
 
     private void GetTestVacancy(int id)
     {
@@ -1082,36 +1175,7 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         addressService.addressRepository.save(address);
     }
 
-    private void SetStaticClassesParametersToNull()
-    {
-        int prof_areas_count = profAreaService.profAreaRepository.findAll().size();
-        int specializations_count = specializationService.specializationRepository.findAll().size();
-        //
-        int company_industries_count = companyIndustryService.companyIndustryRepository.findAll().size();
-        int company_scopes_count = companyScopeService.companyScopeRepository.findAll().size();
-        //
-        int areas_count = areaService.areaRepository.findAll().size();
-        //
-        int metro_lines_count = metroLineService.metroLineRepository.findAll().size();
-        int metro_stations_count = metroStationService.metroStationRepository.findAll().size();
-        //
-        //
-        //
-        int sum_specializations_count = prof_areas_count + specializations_count;
-        int sum_company_industries_count = company_industries_count + company_scopes_count;
-        int sum_metro_lines_metro_stations = metro_lines_count + metro_stations_count;
-        //
-        LoadingParameters.SetLoadingParametersArrayListsToNull(
-                prof_areas_count, specializations_count,
-                company_industries_count, company_scopes_count,
-                areas_count,
-                metro_lines_count, metro_stations_count);
-        RequestParameters.SetRequestParametersArrayListsToNull(
-                sum_specializations_count,
-                sum_company_industries_count,
-                areas_count,
-                sum_metro_lines_metro_stations);
-    }
+
 
 
 
@@ -1136,16 +1200,16 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
 
 
     ///////   CODE   ///////
-    // (+/-) Создать статический класс для хранения параметров запроса
-    // (+/-) Создать статический класс для хранения параметров окна
-    // Добавить действия по добавлению параметров в статический класс слушателям RadioButton и Checkbox в окне настроек
+    // (+) Создать статический класс для хранения параметров запроса
+    // (+) Создать статический класс для хранения параметров окна
+    // (+) Добавить действия по добавлению параметров в статический класс слушателям RadioButton и Checkbox в окне настроек
     // (+) Добавить действия на кнопку Сохранение параметров в окне настроек
     //    (+) нужно будет сохранять только выборы RadioButton'ов и CheckBox'ов окна настроек
-    // (+/-) Заполнение списков листов данными выбранными в других окнах из класса с параметрами окна
-    // Заполнение параметров запроса из статического класса с параметрами
+    // (+) Заполнение списков листов данными выбранными в других окнах из класса с параметрами окна
+    // (+) Заполнение параметров запроса из статического класса с параметрами
     // (+) Метод для загрузки JSON Areas, но уже для меню
     //    (+) наверное, стоит попробовать сохранять этот JSON в файл на диске, чтобы можно было загружать менюшки без Интернета
-    // (+/-) Автогенерация окошек с меню из БД
+    // (+) Автогенерация окошек с меню из БД
     // Заполнение списка вакансий на основном меню - ListModel, ListRenderer
     // Вывод информации об отдельных вакансиях на панель фрейма - GridBagLayout
     // (+) Перерисовка окон с использованием данных, полученных из глобальных параметров из стат. класса
@@ -1396,10 +1460,15 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 //TestSave(test_address);
                 //dispose(); // Выход
                 //GetTestVacancy(44552119);
-                //GetProfAreasAndSpecializations();
-                //GetCompanyIndustriesAndCompanyScopes();
-                //GetAreas();
+                GetAreas();
+                GetProfAreasAndSpecializations();
+                GetCompanyIndustriesAndCompanyScopes();
+                // Не успевает загрузиться, т.к. Areas ещё не добавились до конца
+                // Возможно, стоит поставить загрузку Areas в начале, т.к. они ни от чего не зависят
                 GetMetroStationsAndLines();
+                // Должен идти следом, чтобы не нужно было перезаходить
+                // в окно для работы с окошками, генерируемыми из БД
+                SetStaticClassesParametersToNull();
             }
         });
         panel_south_west.add(btn_load);
