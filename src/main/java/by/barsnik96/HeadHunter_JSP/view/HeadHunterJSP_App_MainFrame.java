@@ -107,11 +107,13 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         data.add(8.77);
         data.add(27.498);
         //
+        // Добавить фильтр на ненулевые элементы списков
+        //
         //
         //
         ArrayList<String> links_to_vacancies = new ArrayList<String>();
         //
-        NetworkService.getInstance().getHeadHunterApi().getVacancies("HR", null, null, data, null,
+        NetworkService.getInstance().getHeadHunterApi().getVacancies("HR", "", "0", data, null,
                 null, null, null, null, null, null)
                 .enqueue(new Callback<>()
                 {
@@ -1137,8 +1139,8 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     // (+/-) Создать статический класс для хранения параметров запроса
     // (+/-) Создать статический класс для хранения параметров окна
     // Добавить действия по добавлению параметров в статический класс слушателям RadioButton и Checkbox в окне настроек
-    // Добавить действия на кнопку Сохранение параметров в окне настроек
-    //    нужно будет сохранять только выборы RadioButton'ов и CheckBox'ов окна настроек
+    // (+) Добавить действия на кнопку Сохранение параметров в окне настроек
+    //    (+) нужно будет сохранять только выборы RadioButton'ов и CheckBox'ов окна настроек
     // (+/-) Заполнение списков листов данными выбранными в других окнах из класса с параметрами окна
     // Заполнение параметров запроса из статического класса с параметрами
     // (+) Метод для загрузки JSON Areas, но уже для меню

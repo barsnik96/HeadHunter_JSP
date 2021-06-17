@@ -1,17 +1,11 @@
 package by.barsnik96.HeadHunter_JSP.view;
 
 import by.barsnik96.HeadHunter_JSP.domain.Area;
-import by.barsnik96.HeadHunter_JSP.domain.CompanyIndustry;
-import by.barsnik96.HeadHunter_JSP.domain.CompanyScope;
-import by.barsnik96.HeadHunter_JSP.domain.Specialization;
 import by.barsnik96.HeadHunter_JSP.service.AreaServiceImpl;
-import by.barsnik96.HeadHunter_JSP.service.CompanyIndustryServiceImpl;
-import by.barsnik96.HeadHunter_JSP.service.CompanyScopeServiceImpl;
 import by.barsnik96.HeadHunter_JSP.utils.BeanProvider;
 import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
 import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
@@ -27,7 +21,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 

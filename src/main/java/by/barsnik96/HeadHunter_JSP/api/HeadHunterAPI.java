@@ -20,7 +20,7 @@ public interface HeadHunterAPI
     @GET("vacancies/")
     Call<JsonObject> getVacancies(@Query("text") String text, @Query("per_page") String per_page, @Query("page") String page,
                                   @Query("specialization") ArrayList<Double> specializations, @Query("area") String area,
-                                  @Query("currency") String currency, @Query("salary") String salary, @Query("only_with_salary") String only_with_salary,
+                                  @Query("currency_code") String currency_code, @Query("salary") String salary, @Query("only_with_salary") String only_with_salary,
                                   @Query("experience") String experience, @Query("employment") String employment, @Query("schedule") String schedule);
 
     @GET

@@ -8,6 +8,14 @@ public class RequestParameters
     public static ArrayList<Double> company_industries_ids = new ArrayList<Double>();
     public static ArrayList<Double> areas_ids = new ArrayList<Double>();
     public static ArrayList<Double> metro_ids = new ArrayList<Double>();
+    public static String text;
+    public static String currency_code;
+    public static String salary;
+    public static String only_with_salary;
+    public static String experience;
+    public static ArrayList<String> employment = new ArrayList<String>();
+    public static ArrayList<String> schedule = new ArrayList<String>();
+    public static String time;
 
     public static void SetRequestParametersArrayListsToNull(int sum_specializations_count,
                                                             int sum_company_industries_count,
@@ -36,5 +44,21 @@ public class RequestParameters
         {
             RequestParameters.metro_ids.add(i, null);
         }
+        //
+        //
+        RequestParameters.text = "";
+        RequestParameters.currency_code = "RUR";
+        RequestParameters.salary = "";
+        RequestParameters.only_with_salary = "false";
+        RequestParameters.experience = "doesNotMatter";
+        for (int i = 0; i < 5; i++)
+        {
+            RequestParameters.employment.add(i, null);
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            RequestParameters.schedule.add(i, null);
+        }
+        RequestParameters.time = "0";
     }
 }

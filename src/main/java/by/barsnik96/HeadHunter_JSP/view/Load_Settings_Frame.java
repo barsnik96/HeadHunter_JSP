@@ -13,10 +13,7 @@ import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.sql.*;
 import java.util.ArrayList;
@@ -47,7 +44,6 @@ public class Load_Settings_Frame extends JDialog
     private JLabel label_company_industries_n_scope = new JLabel("Отрасль компании");
     private JLabel label_area = new JLabel("Регион");
     private JLabel label_salary = new JLabel("Уровень дохода");
-    private JLabel label_search_only_with_salary = new JLabel("Показывать только вакансии с указанным уровнем дохода");
     private JLabel label_metro = new JLabel("Метро");
     private JLabel label_experience = new JLabel("Требуемый опыт работы");
     private JLabel label_employment = new JLabel("Тип занятости");
@@ -56,18 +52,16 @@ public class Load_Settings_Frame extends JDialog
     ///////
     private JTextField text_field_key_words = new JTextField();
     private JTextField text_field_salary = new JTextField();
-    private JTextField text_field_metro = new JTextField();
-    private JTextField text_field_time = new JTextField();
     ///////
-    private String[] combo_box_currency_code_items = {"руб.", "USD", "EUR"};
-    private JComboBox combo_box_currency_code = new JComboBox(combo_box_currency_code_items);
+    //private String[] combo_box_currency_code_items = {"руб.", "USD", "EUR"};
+    private JComboBox combo_box_currency_code = new JComboBox(new String[]{"RUR", "USD", "EUR"});
     private JCheckBox check_box_only_with_salary = new JCheckBox("Только с указанным уровнем дохода");
     ///////
-    private JRadioButton radio_btn_exprience_irrelvant = new JRadioButton("Не имеет значения");
-    private JRadioButton radio_btn_exprience_null = new JRadioButton("Нет опыта");
-    private JRadioButton radio_btn_exprience_1_3 = new JRadioButton("От 1 года до 3 лет");
-    private JRadioButton radio_btn_exprience_3_6 = new JRadioButton("От 3 до 6 лет");
-    private JRadioButton radio_btn_exprience_6_more = new JRadioButton("Более 6 лет");
+    private JRadioButton radio_btn_experience_irrelvant = new JRadioButton("Не имеет значения");
+    private JRadioButton radio_btn_experience_null = new JRadioButton("Нет опыта");
+    private JRadioButton radio_btn_experience_1_3 = new JRadioButton("От 1 года до 3 лет");
+    private JRadioButton radio_btn_experience_3_6 = new JRadioButton("От 3 до 6 лет");
+    private JRadioButton radio_btn_experience_6_more = new JRadioButton("Более 6 лет");
     //
     private JCheckBox check_box_employment_full = new JCheckBox("Полная занятость");
     private JCheckBox check_box_employment_part = new JCheckBox("Частичная занятость");
@@ -99,80 +93,330 @@ public class Load_Settings_Frame extends JDialog
     private JScrollPane scroll_pane_area = new JScrollPane();
     private JScrollPane scroll_pane_metro = new JScrollPane();
     //
-    //
-    //
-    //String[] array = {"111222333444555666777888999000xxxyyyzzz82155490000000001111111333444555666777888", "aaabbbcccaaabbbccc", "bbbaaacccbbbaaaccc", "111", "222", "333", "444"};
-    String[] array = {"aaabbbcccaaabbbccc", "aaabbbcccaaabbbccc", "bbbaaacccbbbaaaccc"};
-    private JList<String> list_prof_area = new JList<>(array);
-    private JList<String> list_company_industries_n_scope = new JList<>(array);
-    private JList<String> list_area = new JList<>(array);
-    private JList<String> list_metro = new JList<>(array);
-    //
+    private JList<String> list_prof_area = new JList<>();
+    private JList<String> list_company_industries_n_scope = new JList<>();
+    private JList<String> list_area = new JList<>();
+    private JList<String> list_metro = new JList<>();
+    ///////
     private MetroLineServiceImpl metroLineService;
     private MetroStationServiceImpl metroStationService;
-    //
+    ///////
     private Area metro_area = new Area();
+    ///////
+    public static String only_with_salary = "false";
+    public static String experience = "doesNotMatter";
+    public static ArrayList<String> employment = new ArrayList<String>();
+    public static ArrayList<String> schedule = new ArrayList<String>();
+    public static String time = "0";
 
 
-
-
-    // Listener for RadioButton's
-    public void actionPerformed(ActionEvent e)
+    private void RadioAndCheckButtonsLoad()
     {
-        e.getSource();
+        /////// Experience
+        //
+        experience = RequestParameters.experience;
+        //
+        if (radio_btn_experience_irrelvant.getActionCommand() == experience)
+        {
+            radio_btn_experience_irrelvant.setSelected(true);
+        }
+        if (radio_btn_experience_null.getActionCommand() == experience)
+        {
+            radio_btn_experience_null.setSelected(true);
+        }
+        if (radio_btn_experience_1_3.getActionCommand() == experience)
+        {
+            radio_btn_experience_1_3.setSelected(true);
+        }
+        if (radio_btn_experience_3_6.getActionCommand() == experience)
+        {
+            radio_btn_experience_3_6.setSelected(true);
+        }
+        if (radio_btn_experience_6_more.getActionCommand() == experience)
+        {
+            radio_btn_experience_6_more.setSelected(true);
+        }
+        /////// Employment
+        //
+        employment = RequestParameters.employment;
+        //
+        if (check_box_employment_full.getActionCommand() == employment.get(0))
+        {
+            check_box_employment_full.setSelected(true);
+        }
+        if (check_box_employment_part.getActionCommand() == employment.get(1))
+        {
+            check_box_employment_part.setSelected(true);
+        }
+        if (check_box_employment_project.getActionCommand() == employment.get(2))
+        {
+            check_box_employment_project.setSelected(true);
+        }
+        if (check_box_employment_volunteer.getActionCommand() == employment.get(3))
+        {
+            check_box_employment_volunteer.setSelected(true);
+        }
+        if (check_box_employment_probation.getActionCommand() == employment.get(4))
+        {
+            check_box_employment_probation.setSelected(true);
+        }
+        /////// Schedule
+        //
+        schedule = RequestParameters.schedule;
+        //
+        if (check_box_schedule_full_day.getActionCommand() == schedule.get(0))
+        {
+            check_box_schedule_full_day.setSelected(true);
+        }
+        if (check_box_schedule_shift.getActionCommand() == schedule.get(1))
+        {
+            check_box_schedule_shift.setSelected(true);
+        }
+        if (check_box_schedule_flexible.getActionCommand() == schedule.get(2))
+        {
+            check_box_schedule_flexible.setSelected(true);
+        }
+        if (check_box_schedule_remote.getActionCommand() == schedule.get(3))
+        {
+            check_box_schedule_remote.setSelected(true);
+        }
+        if (check_box_schedule_fly_in_fly_out.getActionCommand() == schedule.get(4))
+        {
+            check_box_schedule_fly_in_fly_out.setSelected(true);
+        }
+        /////// Time
+        //
+        time = RequestParameters.time;
+        //
+        if (radio_btn_time_all_time.getActionCommand() == time)
+        {
+            radio_btn_time_all_time.setSelected(true);
+        }
+        if (radio_btn_time_month.getActionCommand() == time)
+        {
+            radio_btn_time_month.setSelected(true);
+        }
+        if (radio_btn_time_week.getActionCommand() == time)
+        {
+            radio_btn_time_week.setSelected(true);
+        }
+        if (radio_btn_time_three_days.getActionCommand() == time)
+        {
+            radio_btn_time_three_days.setSelected(true);
+        }
+        if (radio_btn_time_one_day.getActionCommand() == time)
+        {
+            radio_btn_time_one_day.setSelected(true);
+        }
+        /////// only_with_salary
+        //
+        only_with_salary = RequestParameters.only_with_salary;
+        //
+        if (only_with_salary == "true")
+        {
+            check_box_only_with_salary.setSelected(true);
+        }
+        else
+        {
+            check_box_only_with_salary.setSelected(false);
+        }
+        /////// text (key_words)
+        //
+        text_field_key_words.setText(RequestParameters.text);
+        /////// currency_code
+        //
+        combo_box_currency_code.setSelectedItem(RequestParameters.currency_code);
+        /////// salary
+        //
+        text_field_salary.setText(RequestParameters.salary);
     }
 
+    // Listener for RadioButton's Experience
+    public void actionPerformedExperience(ActionEvent e)
+    {
+        switch (e.getActionCommand())
+        {
+            case "doesNotMatter":
+                experience = e.getActionCommand();
+                break;
+            case "noExperience":
+                experience = e.getActionCommand();
+                break;
+            case "between1And3":
+                experience = e.getActionCommand();
+                break;
+            case "between3And6":
+                experience = e.getActionCommand();
+                break;
+            case "moreThan6":
+                experience = e.getActionCommand();
+                break;
+            default:
+                experience = "doesNotMatter";
+        }
+    }
+
+    // Listener for RadioButton's Time
+    public void actionPerformedTime(ActionEvent e)
+    {
+        switch (e.getActionCommand())
+        {
+            case "30":
+                time = "30";
+                break;
+            case "7":
+                time = "7";
+                break;
+            case "3":
+                time = "3";
+                break;
+            case "1":
+                time = "1";
+                break;
+            default:
+                time = "0";
+                break;
+        }
+    }
+
+    // Listener for JCheckBox's Employment
     public void itemStateChangedEmployment(ItemEvent e)
     {
-        Object source = e.getItemSelectable();
-        // Определяем какой именно из checkbox'ов был выбран
-        if (check_box_employment_full.equals(source))
+        JCheckBox checkBox = (JCheckBox) e.getItemSelectable();
+        //
+        switch (checkBox.getActionCommand())
         {
-            ;
-        } else if (check_box_employment_part.equals(source))
-        {
-            ;
-        } else if (check_box_employment_project.equals(source))
-        {
-            ;
-        } else if (check_box_employment_volunteer.equals(source))
-        {
-            ;
-        } else if (check_box_employment_probation.equals(source))
-        {
-            ;
-        }
-        // Если выбор снят, то убираем из параметров
-        if (e.getStateChange() == ItemEvent.DESELECTED)
-        {
-            //c = '-';
+            case "full":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    employment.set(0, checkBox.getActionCommand());
+                }
+                else
+                {
+                    employment.set(0, null);
+                }
+                break;
+            case "part":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    employment.set(1, checkBox.getActionCommand());
+                }
+                else
+                {
+                    employment.set(1, null);
+                }
+                break;
+            case "project":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    employment.set(2, checkBox.getActionCommand());
+                }
+                else
+                {
+                    employment.set(2, null);
+                }
+                break;
+            case "volunteer":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    employment.set(3, checkBox.getActionCommand());
+                }
+                else
+                {
+                    employment.set(3, null);
+                }
+                break;
+            case "probation":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    employment.set(4, checkBox.getActionCommand());
+                }
+                else
+                {
+                    employment.set(4, null);
+                }
+                break;
+            default:
+                employment.clear();
+                employment.add("");
+                break;
         }
     }
 
+    // Listener for JCheckBox's Schedule
     public void itemStateChangedSchedule(ItemEvent e)
     {
-        Object source = e.getItemSelectable();
-        // Определяем какой именно из checkbox'ов был выбран
-        if (check_box_schedule_full_day.equals(source))
+        JCheckBox checkBox = (JCheckBox) e.getItemSelectable();
+        switch (checkBox.getActionCommand())
         {
-            ;
-        } else if (check_box_schedule_shift.equals(source))
-        {
-            ;
-        } else if (check_box_schedule_flexible.equals(source))
-        {
-            ;
-        } else if (check_box_schedule_remote.equals(source))
-        {
-            ;
-        } else if (check_box_schedule_fly_in_fly_out.equals(source))
-        {
-            ;
+            case "fullDay":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    schedule.set(0, checkBox.getActionCommand());
+                }
+                else
+                {
+                    schedule.set(0, null);
+                }
+                break;
+            case "shift":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    schedule.set(1, checkBox.getActionCommand());
+                }
+                else
+                {
+                    schedule.set(1, null);
+                }
+                break;
+            case "flexible":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    schedule.set(2, checkBox.getActionCommand());
+                }
+                else
+                {
+                    schedule.set(2, null);
+                }
+                break;
+            case "remote":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    schedule.set(3, checkBox.getActionCommand());
+                }
+                else
+                {
+                    schedule.set(3, null);
+                }
+                break;
+            case "flyInFlyOut":
+                if (e.getStateChange() == ItemEvent.SELECTED)
+                {
+                    schedule.set(4, checkBox.getActionCommand());
+                }
+                else
+                {
+                    schedule.set(4, null);
+                }
+                break;
+            default:
+                schedule.clear();
+                schedule.add("");
+                break;
         }
-        // Если выбор снят, то убираем из параметров
-        if (e.getStateChange() == ItemEvent.DESELECTED)
+    }
+
+    // Listener for JCheckBox's only_with_salary
+    public void itemStateChangedOnlyWithSalary(ItemEvent e)
+    {
+        JCheckBox checkBox = (JCheckBox) e.getItemSelectable();
+        if (e.getStateChange() == ItemEvent.SELECTED)
         {
-            //c = '-';
+            only_with_salary = "true";
+        }
+        else
+        {
+            only_with_salary = "false";
         }
     }
 
@@ -399,6 +643,7 @@ public class Load_Settings_Frame extends JDialog
         BeanProvider.autowire(this);
         this.metroLineService = BeanProvider.applicationContext.getBean(MetroLineServiceImpl.class);
         this.metroStationService = BeanProvider.applicationContext.getBean(MetroStationServiceImpl.class);
+        //RadioAndCheckButtonsInit();
         // Fonts settings
         Font arial = new Font("Arial", Font.PLAIN, 16);
         //
@@ -457,7 +702,27 @@ public class Load_Settings_Frame extends JDialog
         //
         // Components Settings Panel Center
         //
-        text_field_key_words.setMaximumSize(new Dimension(600, 40));
+        text_field_key_words.setMaximumSize(new Dimension(600, 40)); // 600
+        text_field_key_words.setFont(arial);
+        text_field_key_words.addKeyListener(new KeyAdapter()
+        {
+            public void keyTyped(KeyEvent e)
+            {
+                char c = e.getKeyChar();
+                // Устанавливаем максимальное количество символов в поле ввода
+                if (text_field_key_words.getText().length() >= 250)
+                {
+                    e.consume();
+                }
+                // Запрещаем ввод всего, кроме букв, Backspace и Delete
+                if (!((c == KeyEvent.VK_BACK_SPACE) || (c == KeyEvent.VK_DELETE) || (c == '-'))
+                        && (c >= '0') && (c <= '9'))
+                {
+                    e.consume();
+                }
+            }
+        });
+        //
         button_select_prof_area.setFont(arial);
         button_select_prof_area.addActionListener(new ActionListener()
         {
@@ -497,19 +762,28 @@ public class Load_Settings_Frame extends JDialog
         text_field_salary.setMaximumSize(new Dimension(100, 30));
         text_field_salary.setPreferredSize(new Dimension(100, 30));
         text_field_salary.setFont(arial);
-        check_box_only_with_salary.setFont(arial);
-        check_box_only_with_salary.setSelected(false);
-        check_box_only_with_salary.addActionListener(new ActionListener()
+        text_field_salary.addKeyListener(new KeyAdapter()
         {
-            @Override
-            public void actionPerformed(ActionEvent e)
+            public void keyTyped(KeyEvent e)
             {
-                if (check_box_only_with_salary.isSelected())
+                char c = e.getKeyChar();
+                // Устанавливаем максимальное количество символов в поле ввода
+                if (text_field_salary.getText().length() >= 10)
                 {
-                    // тогда добавляем в статический список параметро only_with_salary = true;
+                    e.consume();
+                }
+                // Запрещаем ввод всего, кроме цифр, Backspace и Delete
+                if (!((c >= '0') && (c <= '9')
+                        || (c == KeyEvent.VK_BACK_SPACE)
+                        || (c == KeyEvent.VK_DELETE)))
+                {
+                    e.consume();
                 }
             }
         });
+        check_box_only_with_salary.setFont(arial);
+        check_box_only_with_salary.setSelected(false);
+        check_box_only_with_salary.addItemListener(this::itemStateChangedOnlyWithSalary);
         //
         panel_salary.add(text_field_salary);
         panel_salary.add(combo_box_currency_code);
@@ -532,42 +806,53 @@ public class Load_Settings_Frame extends JDialog
         });
         ///////
         ButtonGroup button_group_experience = new ButtonGroup();
-        button_group_experience.add(radio_btn_exprience_irrelvant);
-        button_group_experience.add(radio_btn_exprience_null);
-        button_group_experience.add(radio_btn_exprience_1_3);
-        button_group_experience.add(radio_btn_exprience_3_6);
-        button_group_experience.add(radio_btn_exprience_6_more);
+        button_group_experience.add(radio_btn_experience_irrelvant);
+        button_group_experience.add(radio_btn_experience_null);
+        button_group_experience.add(radio_btn_experience_1_3);
+        button_group_experience.add(radio_btn_experience_3_6);
+        button_group_experience.add(radio_btn_experience_6_more);
         //
-        radio_btn_exprience_irrelvant.setFont(arial);
-        radio_btn_exprience_irrelvant.addActionListener(this::actionPerformed);
-        radio_btn_exprience_null.setFont(arial);
-        radio_btn_exprience_null.addActionListener(this::actionPerformed);
-        radio_btn_exprience_1_3.setFont(arial);
-        radio_btn_exprience_1_3.addActionListener(this::actionPerformed);
-        radio_btn_exprience_3_6.setFont(arial);
-        radio_btn_exprience_3_6.addActionListener(this::actionPerformed);
-        radio_btn_exprience_6_more.setFont(arial);
-        radio_btn_exprience_6_more.addActionListener(this::actionPerformed);
+        radio_btn_experience_irrelvant.setFont(arial);
+        radio_btn_experience_irrelvant.setActionCommand("doesNotMatter");
+        radio_btn_experience_irrelvant.addActionListener(this::actionPerformedExperience);
+        radio_btn_experience_irrelvant.setSelected(true);
+        radio_btn_experience_null.setFont(arial);
+        radio_btn_experience_null.setActionCommand("noExperience");
+        radio_btn_experience_null.addActionListener(this::actionPerformedExperience);
+        radio_btn_experience_1_3.setFont(arial);
+        radio_btn_experience_1_3.setActionCommand("between1And3");
+        radio_btn_experience_1_3.addActionListener(this::actionPerformedExperience);
+        radio_btn_experience_3_6.setFont(arial);
+        radio_btn_experience_3_6.setActionCommand("between3And6");
+        radio_btn_experience_3_6.addActionListener(this::actionPerformedExperience);
+        radio_btn_experience_6_more.setFont(arial);
+        radio_btn_experience_6_more.setActionCommand("moreThan6");
+        radio_btn_experience_6_more.addActionListener(this::actionPerformedExperience);
         //
-        panel_radio_buttons_experience.add(radio_btn_exprience_irrelvant);
-        panel_radio_buttons_experience.add(radio_btn_exprience_null);
-        panel_radio_buttons_experience.add(radio_btn_exprience_1_3);
-        panel_radio_buttons_experience.add(radio_btn_exprience_3_6);
-        panel_radio_buttons_experience.add(radio_btn_exprience_6_more);
+        panel_radio_buttons_experience.add(radio_btn_experience_irrelvant);
+        panel_radio_buttons_experience.add(radio_btn_experience_null);
+        panel_radio_buttons_experience.add(radio_btn_experience_1_3);
+        panel_radio_buttons_experience.add(radio_btn_experience_3_6);
+        panel_radio_buttons_experience.add(radio_btn_experience_6_more);
         //
         panel_radio_buttons_experience.setMaximumSize(new Dimension(295, 110));
         panel_radio_buttons_experience.setAlignmentX(Component.LEFT_ALIGNMENT);
         panel_radio_buttons_experience.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 130));
         ///////
         check_box_employment_full.setFont(arial);
+        check_box_employment_full.setActionCommand("full");
         check_box_employment_full.addItemListener(this::itemStateChangedEmployment);
         check_box_employment_part.setFont(arial);
+        check_box_employment_part.setActionCommand("part");
         check_box_employment_part.addItemListener(this::itemStateChangedEmployment);
         check_box_employment_project.setFont(arial);
+        check_box_employment_project.setActionCommand("project");
         check_box_employment_project.addItemListener(this::itemStateChangedEmployment);
         check_box_employment_volunteer.setFont(arial);
+        check_box_employment_volunteer.setActionCommand("volunteer");
         check_box_employment_volunteer.addItemListener(this::itemStateChangedEmployment);
         check_box_employment_probation.setFont(arial);
+        check_box_employment_probation.setActionCommand("probation");
         check_box_employment_probation.addItemListener(this::itemStateChangedEmployment);
         //
         panel_checkboxes_employment.add(check_box_employment_full);
@@ -582,14 +867,19 @@ public class Load_Settings_Frame extends JDialog
         panel_checkboxes_employment.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 130));
         ///////
         check_box_schedule_full_day.setFont(arial);
+        check_box_schedule_full_day.setActionCommand("fullDay");
         check_box_schedule_full_day.addItemListener(this::itemStateChangedSchedule);
         check_box_schedule_shift.setFont(arial);
+        check_box_schedule_shift.setActionCommand("shift");
         check_box_schedule_shift.addItemListener(this::itemStateChangedSchedule);
         check_box_schedule_flexible.setFont(arial);
+        check_box_schedule_flexible.setActionCommand("flexible");
         check_box_schedule_flexible.addItemListener(this::itemStateChangedSchedule);
         check_box_schedule_remote.setFont(arial);
+        check_box_schedule_remote.setActionCommand("remote");
         check_box_schedule_remote.addItemListener(this::itemStateChangedSchedule);
         check_box_schedule_fly_in_fly_out.setFont(arial);
+        check_box_schedule_fly_in_fly_out.setActionCommand("flyInFlyOut");
         check_box_schedule_fly_in_fly_out.addItemListener(this::itemStateChangedSchedule);
         //
         panel_checkboxes_schedule.add(check_box_schedule_full_day);
@@ -682,15 +972,21 @@ public class Load_Settings_Frame extends JDialog
         button_group_time.add(radio_btn_time_one_day);
         //
         radio_btn_time_all_time.setFont(arial);
-        radio_btn_time_all_time.addActionListener(this::actionPerformed);
+        radio_btn_time_all_time.setActionCommand("0");
+        radio_btn_time_all_time.addActionListener(this::actionPerformedTime);
+        radio_btn_time_all_time.setSelected(true);
         radio_btn_time_month.setFont(arial);
-        radio_btn_time_month.addActionListener(this::actionPerformed);
+        radio_btn_time_month.setActionCommand("30");
+        radio_btn_time_month.addActionListener(this::actionPerformedTime);
         radio_btn_time_week.setFont(arial);
-        radio_btn_time_week.addActionListener(this::actionPerformed);
+        radio_btn_time_week.setActionCommand("7");
+        radio_btn_time_week.addActionListener(this::actionPerformedTime);
         radio_btn_time_three_days.setFont(arial);
-        radio_btn_time_three_days.addActionListener(this::actionPerformed);
+        radio_btn_time_three_days.setActionCommand("3");
+        radio_btn_time_three_days.addActionListener(this::actionPerformedTime);
         radio_btn_time_one_day.setFont(arial);
-        radio_btn_time_one_day.addActionListener(this::actionPerformed);
+        radio_btn_time_one_day.setActionCommand("1");
+        radio_btn_time_one_day.addActionListener(this::actionPerformedTime);
         //
         panel_radio_buttons_time.add(radio_btn_time_all_time);
         panel_radio_buttons_time.add(radio_btn_time_month);
@@ -713,7 +1009,7 @@ public class Load_Settings_Frame extends JDialog
         //                //
         GridBagLayout grid_bag_layout = new GridBagLayout();
         panel_east.setLayout(grid_bag_layout);
-        panel_east.setBorder(BorderFactory.createEmptyBorder(0, 0, 188, 10));
+        panel_east.setBorder(BorderFactory.createEmptyBorder(0, 0, 153, 10));
         GridBagConstraints c = new GridBagConstraints();
         //
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -742,19 +1038,94 @@ public class Load_Settings_Frame extends JDialog
         // Components Settings Panel South
         //
         button_save_settings.setFont(arial);
-        button_save_settings.setPreferredSize(new Dimension(this.getSize().width, button_save_settings.getPreferredSize().height));
+        button_save_settings.setMargin(new Insets(10, 13, 10, 13));
+        button_save_settings.setForeground(Color.WHITE);
+        button_save_settings.setBackground(new Color(30, 136, 229));
         button_save_settings.addActionListener(new ActionListener()
         {
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                // Do something
                 // Сохраняем параметры с экрана в статический класс с настройками
+                RequestParameters.text = text_field_key_words.getText();
+                RequestParameters.currency_code = (String) combo_box_currency_code.getSelectedItem();
+                RequestParameters.salary = text_field_salary.getText();
+                RequestParameters.only_with_salary = only_with_salary;
+                //
+                RequestParameters.experience = experience;
+                RequestParameters.employment = employment;
+                RequestParameters.schedule = schedule;
+                RequestParameters.time = time;
+                //
+                dispose();
             }
         });
         //
         // Panel South
         //
+        panel_south.setBorder(BorderFactory.createEmptyBorder(0, 0, 20, 0));
         panel_south.add(button_save_settings);
+        // Load RequestParameters
+        RadioAndCheckButtonsLoad();
     }
 }
+
+
+
+/*
+///////
+        // Deprecated because now we have itemStateChange Listener with right logic
+        check_box_only_with_salary.addActionListener(new ActionListener()
+        {
+            @Override
+            public void actionPerformed(ActionEvent e)
+            {
+                if (check_box_only_with_salary.isSelected())
+                {
+                    // тогда добавляем в статический список параметро only_with_salary = true;
+                }
+            }
+        });
+///////
+    // Already exists in RequestParameters init method
+    private void RadioAndCheckButtonsInit()
+    {
+        RequestParameters.experience = "doesNotMatter";
+        //
+        for (int i = 0; i < 5; i++)
+        {
+            RequestParameters.employment.add(i, null);
+        }
+        //
+        for (int i = 0; i < 5; i++)
+        {
+            RequestParameters.schedule.add(i, null);
+        }
+        //
+        RequestParameters.time = "0";
+    }
+///////
+        Object source = e.getItemSelectable();
+        // Определяем какой именно из checkbox'ов был выбран
+        if (check_box_employment_full.equals(source))
+        {
+            ;
+        } else if (check_box_employment_part.equals(source))
+        {
+            ;
+        } else if (check_box_employment_project.equals(source))
+        {
+            ;
+        } else if (check_box_employment_volunteer.equals(source))
+        {
+            ;
+        } else if (check_box_employment_probation.equals(source))
+        {
+            ;
+        }
+        // Если выбор снят, то убираем из параметров
+        if (e.getStateChange() == ItemEvent.DESELECTED)
+        {
+            //c = '-';
+        }
+ */
