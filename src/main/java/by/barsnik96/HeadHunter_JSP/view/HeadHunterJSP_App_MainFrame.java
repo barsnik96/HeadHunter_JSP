@@ -5,6 +5,7 @@ import by.barsnik96.HeadHunter_JSP.domain.Currency;
 import by.barsnik96.HeadHunter_JSP.service.*;
 import by.barsnik96.HeadHunter_JSP.utils.BeanProvider;
 
+import by.barsnik96.HeadHunter_JSP.utils.JPanelListRenderer;
 import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
 import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 import com.google.gson.*;
@@ -47,23 +48,26 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     private JPanel panel_south = new JPanel(); // Нижняя панель
     private JPanel panel_south_west = new JPanel(); // Панель с кнопками "Загрузить" и "Просмотреть"
     private JPanel panel_south_east = new JPanel(); // Панель с кнопкой "Выход"
-    // Панель с прокруткой для списка вакансий
-    private JScrollPane vacanciesListScrollPane = new JScrollPane(panel_center_west);
-    // Панель с прокруткой для данных
-    private JScrollPane vacanciesInfoScrollPane = new JScrollPane(panel_center_east);
-    // Раздельная центральная панель для отображения вакансий и данных
-    private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vacanciesListScrollPane, vacanciesInfoScrollPane);
     ///////
-    private JList<Vacancy> list_vacancies = new JList<Vacancy>();
-    //
+    // Панель с прокруткой для списка вакансий
+    private JScrollPane scroll_pane_vacancies_short_info = new JScrollPane();
+    // Панель с прокруткой для данных
+    private JScrollPane scroll_pane_vacancies_full_info = new JScrollPane();
+    // Раздельная центральная панель для отображения вакансий и данных
+    private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, scroll_pane_vacancies_short_info, scroll_pane_vacancies_full_info);
+    ///////
+    // Data
+    private JList<Vacancy> list_vacancies_short_info = new JList<Vacancy>();
+    private JPanel panel_vacancy_full_info = new JPanel();
+    ///////
     private JLabel label_app_name = new JLabel("HeadHunterJSP App"); // Название приложения
-    //
+    ///////
     private JButton btn_load_settings = new JButton("Настройки параметров загрузки вакансий");
     private JButton btn_view_settings = new JButton("Настройки параметров просмотра вакансий");
     private JButton btn_load = new JButton("Загрузка вакансий");
     private JButton btn_view = new JButton("Просмотр вакансий");
     private JButton btn_exit = new JButton("Выход");
-    //
+    ///////
     private Dimension min_size_list;
     ///            ///
     /// REPOSITORY ///
@@ -86,9 +90,9 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     private SpecializationServiceImpl specializationService;
     private VacancyServiceImpl vacancyService;
     private VacancyTypeServiceImpl vacancyTypeService;
-    ///           ///
-    /// FUNCTIONS ///
-    ///           ///
+    ///                       ///
+    /// GLOBAL DATA VARIABLES ///
+    ///                       ///
     File areas = null;
     {
         try {
@@ -97,8 +101,11 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             e.printStackTrace();
         }
     }
-    JsonObject single_vacancy_json = new JsonObject();
-    JsonObject single_employer_json = new JsonObject();
+    private JsonObject single_vacancy_json = new JsonObject();
+    private JsonObject single_employer_json = new JsonObject();
+    ///           ///
+    /// FUNCTIONS ///
+    ///           ///
 
 
 
@@ -902,7 +909,7 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     .getAsString();
             GetEmployerByUrl(link);
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -1202,19 +1209,21 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     // Заполнение списка вакансий на основном меню - ListModel, ListRenderer
     // Вывод информации об отдельных вакансиях на панель фрейма - GridBagLayout
 
-    private static ListCellRenderer<? super Vacancy> createListRenderer() {
+    /*private static ListCellRenderer<? super Vacancy> createListRenderer() {
         return new DefaultListCellRenderer() {
 
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
             {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (c instanceof JLabel)
-                {
-                    JLabel label = (JLabel) c;
+
+                JPanel panel = (JPanel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                //if (c instanceof JPanel)
+                //{
+                    //JLabel label = (JLabel) c;
+                    //JPanel main_panel = (JPanel) c;
                     Vacancy vacancy = (Vacancy) value;
                     //
-                    JPanel main_panel = new JPanel();
+                    //JPanel main_panel = new JPanel();
                     JPanel center_panel = new JPanel();
                     JPanel right_panel = new JPanel();
                     ///////
@@ -1245,13 +1254,41 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     label_vacancy_name.setText(vacancy.getName());
                     label_company_name.setText(vacancy.getEmployer().getName());
                     //
-                    String address = vacancy.getAddress().getCity();
+                    String address = null;
+                    //
+                    if (vacancy.getAddress() != null)
+                    {
+                        if (vacancy.getAddress().getCity() != null &&
+                            vacancy.getAddress().getStreet() != null &&
+                            vacancy.getAddress().getBuilding() != null)
+                        {
+                            address = vacancy.getAddress().getCity() + ", " +
+                                    vacancy.getAddress().getStreet() + ", " +
+                                    vacancy.getAddress().getBuilding();
+                        }
+                        else if (vacancy.getAddress().getCity() != null &&
+                            vacancy.getAddress().getStreet() != null)
+                        {
+                            address = vacancy.getAddress().getCity() + ", " +
+                                    vacancy.getAddress().getStreet();
+                        }
+                        else if (vacancy.getAddress().getCity() != null)
+                        {
+                            address = vacancy.getAddress().getCity();
+                        }
+                    }
+                    else
+                    {
+                        address = vacancy.getArea().getName();
+                    }
+                    //
+                    //
                     if (vacancy.getMetro_stations().size() != 0)
                     {
                         MetroStation[] metro_stations = vacancy.getMetro_stations().toArray(new MetroStation[vacancy.getMetro_stations().size()]);
                         for (int i = 0; i < metro_stations.length; i++)
                         {
-                            address += (", " + metro_stations[i].getName());
+                            address += (", " + "ст. " + metro_stations[i].getName());
                         }
                     }
                     // !!! Нужно ещё добавить сюда цвета станций
@@ -1327,11 +1364,14 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     constraints.insets = new Insets(0, 0, 0, 0);
                     center_panel.add(label_data, constraints);
                     //
-                    main_panel.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-                    main_panel.setLayout(new BorderLayout());
-                    main_panel.add(center_panel, BorderLayout.CENTER);
-                    main_panel.add(right_panel, BorderLayout.EAST);
-                    label.add(main_panel);
+                    //main_panel.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+                    //main_panel.setLayout(new BorderLayout());
+
+                    //main_panel.add(center_panel, BorderLayout.CENTER);
+                    //main_panel.add(right_panel, BorderLayout.EAST);
+                    panel.add(center_panel, BorderLayout.CENTER);
+                    panel.add(right_panel, BorderLayout.EAST);
+                    //label.add(main_panel);
 
                     // Возможно понадобится, для отображения цветного кружка рядом с названием ст. метро
                     /*
@@ -1380,12 +1420,13 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     };
                     label.setIcon(icon_metro_line_color);
                     label.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 5));
-                    label.setOpaque(true);*/
-                }
-                return c;
+                    label.setOpaque(true);
+                //}
+                return panel; // c
             }
         };
     }
+    */
 
 
 
@@ -1550,21 +1591,37 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             @Override
             public void propertyChange(PropertyChangeEvent pce)
             {
-                min_size_list = vacanciesListScrollPane.getPreferredSize();
+                min_size_list = scroll_pane_vacancies_short_info.getPreferredSize();
             }
         });
-        // Provide minimum sizes for the two components in the split pane.
-        vacanciesListScrollPane.setMinimumSize(new Dimension(400, 50));
-        vacanciesInfoScrollPane.setMinimumSize(new Dimension(400, 50));
         // Provide a preferred size for the split pane.
         splitPane.setPreferredSize(new Dimension(1850, 900)); // 1200, 520
         ///                   ///
         /// Center west panel ///
         ///                   ///
-        // Vacancies List
-        vacanciesListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        vacanciesListScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        vacanciesListScrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        // Vacancies List Short Info
+        scroll_pane_vacancies_short_info.setViewportView(panel_center_west);
+        scroll_pane_vacancies_short_info.setMinimumSize(new Dimension(400, 50));
+        scroll_pane_vacancies_short_info.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll_pane_vacancies_short_info.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll_pane_vacancies_short_info.getVerticalScrollBar().setUnitIncrement(16);
+        // Vacancies List Short Info Data
+        list_vacancies_short_info.setCellRenderer(new JPanelListRenderer()); //createListRenderer());
+        list_vacancies_short_info.addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                //System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                if (e.getValueIsAdjusting())
+                {
+                    JList list = (JList) e.getSource();
+
+                }
+            }
+        });
+        list_vacancies_short_info.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list_vacancies_short_info.setSelectedIndex(-1);
+        list_vacancies_short_info.setPreferredSize(min_size_list);
+        // Set Data
         /*
         list = new JList();
         SetModelToJList(list);
@@ -1603,25 +1660,28 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             }
         });
         */
-        panel_center_west.setLayout(new BorderLayout());
-        //panel_center_west_list.add(list, BorderLayout.CENTER);
-        //panel_center_west_list.add(btn_AddChat, BorderLayout.NORTH);
-        //panel_center_west_list.add(btn_DeleteChat, BorderLayout.SOUTH);
+        //panel_center_west.setLayout(new BorderLayout());
+        panel_center_west.add(list_vacancies_short_info, BorderLayout.CENTER);
         ///                   ///
         /// Center east panel ///
         ///                   ///
-        // Messages
-        panel_center_east.setBackground(new Color(255, 255, 255, 255));
-        vacanciesInfoScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        vacanciesInfoScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        vacanciesInfoScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        //
-        //group_layout = new GroupLayout(panel_center_east_messages);
-        //panel_center_east_messages.setLayout(group_layout);
+        // Vacancies Panel Full Info
+        scroll_pane_vacancies_full_info.setViewportView(panel_center_east);
+        scroll_pane_vacancies_full_info.setMinimumSize(new Dimension(400, 50));
+        scroll_pane_vacancies_full_info.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll_pane_vacancies_full_info.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scroll_pane_vacancies_full_info.getVerticalScrollBar().setUnitIncrement(16);
+        // Vacancies Panel Full Info Data
+        //panel_vacancy_full_info
+        //panel_center_east.setBackground(new Color(255, 255, 255, 255));
+        panel_center_east.setLayout(new BorderLayout());
+        panel_center_east.add(panel_vacancy_full_info, BorderLayout.CENTER);
         ///                          ///
         /// Adding all center panels ///
         ///                          ///
         panel_center.add(splitPane);
+        //panel_center.add(panel_center_west, BorderLayout.WEST);
+        //panel_center.add(panel_center_east, BorderLayout.EAST);
         add(panel_center, BorderLayout.CENTER);
         ///             ///
         /// South panel ///
@@ -1651,11 +1711,17 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                     GetVacancyJsonByUrl(links.get(i));
                 }
                 */
-                try
-                {
-                    TestLoadingFromJList testLoadingFromJList = new TestLoadingFromJList();
+
+                GetVacancyJsonByUrl("https://api.hh.ru/vacancies/44711017");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
                 }
-                catch (SQLException sqlException) {}
+                System.out.println(single_vacancy_json);
+                ParseAndSaveVacancyFromJson(single_vacancy_json);
+                ArrayList<Vacancy> list_vacancies_data = (ArrayList<Vacancy>) vacancyService.vacancyRepository.findAll();
+                list_vacancies_short_info.setListData(list_vacancies_data.toArray(new Vacancy[list_vacancies_data.size()]));
             }
         });
         // Кнопка "Просмотр вакансий"
@@ -1689,17 +1755,6 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 // Должен идти следом, чтобы не нужно было перезаходить
                 // в окно для работы с окошками, генерируемыми из БД
                 SetStaticClassesParametersToNull();
-
-
-
-                GetVacancyJsonByUrl("https://api.hh.ru/vacancies/44711017");
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException interruptedException) {
-                    interruptedException.printStackTrace();
-                }
-                System.out.println(single_vacancy_json);
-                ParseAndSaveVacancyFromJson(single_vacancy_json);
             }
         });
         panel_south_west.add(btn_load);

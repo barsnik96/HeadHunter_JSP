@@ -24,11 +24,11 @@ public class Vacancy
     @Column(name = "vacancy_description")
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_type")
     private VacancyType type;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_employer")
     private Employer employer;
 
@@ -41,27 +41,27 @@ public class Vacancy
     @Column(name = "vacancy_salary_gross")
     private boolean salary_gross;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_salary_currency")
     private Currency currency;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_area")
     private Area area;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_address")
     private Address address;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_experience")
     private ExperienceType experience;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_employment")
     private EmploymentType employment;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vacancy_schedule")
     private ScheduleType schedule;
 
@@ -78,25 +78,25 @@ public class Vacancy
     @Column(name = "vacancy_accept_kids")
     private boolean accept_kids;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vacancies_n_specializations",
             joinColumns = @JoinColumn(name = "vacancy_ID"),
             inverseJoinColumns = @JoinColumn(name = "specialization_ID"))
     private Set<Specialization> specializations;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vacancies_n_key_skills",
             joinColumns = @JoinColumn(name = "vacancy_ID"),
             inverseJoinColumns = @JoinColumn(name = "key_skill_ID"))
     private Set<KeySkill> key_skills;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vacancies_n_metro_stations",
             joinColumns = @JoinColumn(name = "vacancy_ID"),
             inverseJoinColumns = @JoinColumn(name = "station_ID"))
     private Set<MetroStation> metro_stations;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "vacancies_n_driver_license_types",
             joinColumns = @JoinColumn(name = "vacancy_ID"),
             inverseJoinColumns = @JoinColumn(name = "driver_license_ID"))
