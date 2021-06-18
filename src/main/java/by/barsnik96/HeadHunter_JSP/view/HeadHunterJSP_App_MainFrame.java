@@ -9,11 +9,9 @@ import by.barsnik96.HeadHunter_JSP.utils.LoadingParameters;
 import by.barsnik96.HeadHunter_JSP.utils.RequestParameters;
 import com.google.gson.*;
 import com.google.gson.stream.JsonWriter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 
 import by.barsnik96.HeadHunter_JSP.api.NetworkService;
-import okhttp3.ResponseBody;
 import org.springframework.util.ResourceUtils;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -25,6 +23,7 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.geom.Ellipse2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.*;
@@ -54,10 +53,10 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
     private JScrollPane vacanciesInfoScrollPane = new JScrollPane(panel_center_east);
     // Раздельная центральная панель для отображения вакансий и данных
     private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, vacanciesListScrollPane, vacanciesInfoScrollPane);
+    ///////
+    private JList<Vacancy> list_vacancies = new JList<Vacancy>();
     //
     private JLabel label_app_name = new JLabel("HeadHunterJSP App"); // Название приложения
-    //
-    //private JTextField text_field_message = new JTextField(); //
     //
     private JButton btn_load_settings = new JButton("Настройки параметров загрузки вакансий");
     private JButton btn_view_settings = new JButton("Настройки параметров просмотра вакансий");
@@ -98,6 +97,11 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             e.printStackTrace();
         }
     }
+    JsonObject single_vacancy_json = new JsonObject();
+    JsonObject single_employer_json = new JsonObject();
+
+
+
 
     private void SetStaticClassesParametersToNull()
     {
@@ -141,9 +145,9 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             {
                 if (response.isSuccessful())
                 {
-                    if(!response.body().isJsonNull())
+                    JsonObject dictionaries_json = response.body().getAsJsonObject();
+                    if(!dictionaries_json.isJsonNull())
                     {
-                        JsonObject dictionaries_json = response.body().getAsJsonObject();
                         //
                         // VacancyType
                         //
@@ -771,23 +775,23 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         return links_to_vacancies;
     }
 
-    private JsonObject GetEmployerByUrl(String url)
+    private void GetEmployerByUrl(String url)
     {
-        final JsonObject[] employer_json = {new JsonObject()};
-        //
         NetworkService.getInstance().getHeadHunterApi().getEmployerByUrl(url).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
             {
                 if (response.isSuccessful())
                 {
-                    if(response.body() != null)
+                    JsonObject employer_json = response.body().getAsJsonObject();
+                    // !!! Проверка не скрыт ли Employer
+                    if(employer_json != null && employer_json.has("id"))
                     {
-                        employer_json[0] = response.body().getAsJsonObject();
+                        single_employer_json = employer_json;
                     }
                     else
                     {
-                        employer_json[0] = null;
+                        single_employer_json = null;
                     }
                 }
             }
@@ -799,47 +803,35 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 t.printStackTrace();
             }
         });
-        return employer_json[0];
     }
 
-    private JsonObject GetVacancyJsonByUrl(String url)
+    private void GetVacancyJsonByUrl(String url)
     {
-        final JsonObject[] result = {new JsonObject()};
-        //
         NetworkService.getInstance().getHeadHunterApi().getVacancyByUrl(url).enqueue(new Callback<>()
         {
             @Override
-            public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
+            public void onResponse(@NonNull Call<JsonElement> call, @NonNull Response<JsonElement> response)
             {
                 if (response.isSuccessful())
                 {
-                    if(!response.body().isJsonNull())
+                    JsonObject vacancy_json = response.body().getAsJsonObject();
+                    // Проверка что в ответе именно данные, а не Json ошибки
+                    // И что такой вакансии ещё нет в БД
+                    /*if (!vacancy_json.has("id") ||
+                            vacancyService.vacancyRepository.existsById(vacancy_json.get("id").getAsInt()))
                     {
-                        // Проверка что в ответе именно данные, а не Json ошибки
-                        // И что такой вакансии ещё нет в БД
-                        if (!response.body().has("id") ||
-                                vacancyService.vacancyRepository.existsById(response.body().get("id").getAsInt())
-                        )
-                        {
-                            result[0] = null;
-                        }
-                        else
-                        {
-                            result[0] = response.body();
-                        }
-                    }
-                    System.out.println("Vacancy by url:" + url + "loaded!");
+                    }*/
+                    single_vacancy_json = vacancy_json;
+                    System.out.println("Vacancy by url:" + url + " loaded!");
                 }
             }
             @Override
-            public void onFailure(@NonNull Call<JsonObject> call, @NonNull Throwable t)
+            public void onFailure(@NonNull Call<JsonElement> call, @NonNull Throwable t)
             {
                 System.out.println("Error occurred while getting request!");
                 t.printStackTrace();
             }
         });
-        //
-        return result[0];
     }
 
     private void ParseAndSaveVacancyFromJson(JsonObject vacancy_json)
@@ -908,49 +900,57 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             String link = employer_json
                     .get("url")
                     .getAsString();
-            JsonObject employer_full_json = GetEmployerByUrl(link);
+            GetEmployerByUrl(link);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             if (employerService.employerRepository
-                    .existsById(employer_full_json
+                    .existsById(single_employer_json
                             .get("id")
                             .getAsInt())
             )
             {
                 employerService.employerRepository
-                        .findById(employer_full_json
+                        .findById(single_employer_json
                                 .get("id")
                                 .getAsInt())
                         .ifPresent(vacancy::setEmployer);
             }
             else
             {
-                employer.setId(employer_full_json
+                employer.setId(single_employer_json
                         .get("id")
                         .getAsInt());
-                employer.setName(employer_full_json
+                employer.setName(single_employer_json
                         .get("name")
                         .getAsString());
                 employerTypeService.employerTypeRepository
-                        .findById(employer_full_json
+                        .findById(single_employer_json
                                 .get("type")
                                 .getAsString())
                         .ifPresent(employer::setType);
-                employer.setDescription(employer_full_json
+                employer.setDescription(single_employer_json
                         .get("description")
                         .getAsString());
 
-                JsonArray scopes_json = employer_full_json.get("industries").getAsJsonArray();
-                for (int i = 0; i < scopes_json.size(); i++)
+                if (!single_employer_json.get("industries").isJsonNull())
                 {
-                    JsonObject array_element = scopes_json.get(i).getAsJsonObject();
-                    companyScopeService.companyScopeRepository
-                            .findById(Integer.parseInt(array_element
-                                    .get("id")
-                                    .getAsString()
-                                    .split("\\.")[1]))
-                            .ifPresent(company_scopes::add);
+                    JsonArray scopes_json = single_employer_json.get("industries").getAsJsonArray();
+                    for (int i = 0; i < scopes_json.size(); i++)
+                    {
+                        JsonObject array_element = scopes_json.get(i).getAsJsonObject();
+                        companyScopeService.companyScopeRepository
+                                .findById(Integer.parseInt(array_element
+                                        .get("id")
+                                        .getAsString()
+                                        .split("\\.")[1]))
+                                .ifPresent(company_scopes::add);
+                    }
+                    // set
+                    employer.setScopes(company_scopes);
                 }
-                // set
-                employer.setScopes(company_scopes);
                 // save
                 employerService.employerRepository.save(employer);
                 // set
@@ -972,12 +972,26 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         if (!vacancy_json.get("salary").isJsonNull())
         {
             JsonObject salary_json = vacancy_json.get("salary").getAsJsonObject();
-            vacancy.setSalary_from(salary_json
-                    .get("from")
-                    .getAsInt());
-            vacancy.setSalary_to(salary_json
-                    .get("to")
-                    .getAsInt());
+            if (!salary_json.get("from").isJsonNull())
+            {
+                vacancy.setSalary_from(salary_json
+                        .get("from")
+                        .getAsInt());
+            }
+            else
+            {
+                vacancy.setSalary_from(0);
+            }
+            if (!salary_json.get("to").isJsonNull())
+            {
+                vacancy.setSalary_to(salary_json
+                        .get("to")
+                        .getAsInt());
+            }
+            else
+            {
+                vacancy.setSalary_to(0);
+            }
             vacancy.setSalary_gross(salary_json
                     .get("gross")
                     .getAsBoolean());
@@ -993,80 +1007,92 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         //
         // Address
         //
-        JsonObject address_json = vacancy_json.get("address").getAsJsonObject();
-        address.setCity(address_json
-                .get("city")
-                .getAsString());
-        address.setStreet(address_json
-                .get("street")
-                .getAsString());
-        address.setBuilding(address_json
-                .get("building")
-                .getAsString());
-        address.setDescription(address_json
-                .get("description")
-                .getAsString());
-        address.setLat(address_json
-                .get("lat")
-                .getAsDouble());
-        address.setLng(address_json
-                .get("lng")
-                .getAsDouble());
-        // save and set
-        vacancy.setAddress(addressService.addressRepository.save(address));
-        //
-        // Metro
-        //
-        if (!vacancy_json.get("address").getAsJsonObject().get("metro").isJsonNull())
+        if (!vacancy_json.get("address").isJsonNull())
         {
-            JsonArray metro_stations_json = vacancy_json
-                    .get("address")
-                    .getAsJsonObject()
-                    .get("metro_stations")
-                    .getAsJsonArray();
-            for (int i = 0; i < metro_stations_json.size(); i++)
+            JsonObject address_json = vacancy_json.get("address").getAsJsonObject();
+            address.setCity(address_json
+                    .get("city")
+                    .getAsString());
+            address.setStreet(address_json
+                    .get("street")
+                    .getAsString());
+            address.setBuilding(address_json
+                    .get("building")
+                    .getAsString());
+            address.setDescription(address_json
+                    .get("description")
+                    .getAsString());
+            address.setLat(address_json
+                    .get("lat")
+                    .getAsDouble());
+            address.setLng(address_json
+                    .get("lng")
+                    .getAsDouble());
+            // save and set
+            vacancy.setAddress(addressService.addressRepository.save(address));
+            //
+            // Metro
+            //
+            if (!vacancy_json.get("address").getAsJsonObject().get("metro").isJsonNull())
             {
-                JsonObject array_element = metro_stations_json.get(i).getAsJsonObject();
-                // MetroLine - вернётся автоматически через связь
-                metroStationService.metroStationRepository
-                        .findById(Integer.parseInt(array_element
-                                .get("station_id")
-                                .getAsString()
-                                .split("\\.")[1]))
-                        .ifPresent(metro_stations::add);
+                JsonArray metro_stations_json = vacancy_json
+                        .get("address")
+                        .getAsJsonObject()
+                        .get("metro_stations")
+                        .getAsJsonArray();
+                for (int i = 0; i < metro_stations_json.size(); i++)
+                {
+                    JsonObject array_element = metro_stations_json.get(i).getAsJsonObject();
+                    // MetroLine - вернётся автоматически через связь
+                    metroStationService.metroStationRepository
+                            .findById(Integer.parseInt(array_element
+                                    .get("station_id")
+                                    .getAsString()
+                                    .split("\\.")[1]))
+                            .ifPresent(metro_stations::add);
+                }
+                // set
+                vacancy.setMetro_stations(metro_stations);
             }
-            // set
-            vacancy.setMetro_stations(metro_stations);
         }
         //
         // ExperienceType
         //
-        JsonObject experience_type_json = vacancy_json
-                .get("experience")
-                .getAsJsonObject();
-        experienceTypeService.experienceTypeRepository
-                .findById(experience_type_json
-                        .get("id")
-                        .getAsString())
-                .ifPresent(vacancy::setExperience);
+        if (!vacancy_json.get("experience").getAsJsonObject().isJsonNull())
+        {
+            JsonObject experience_type_json = vacancy_json
+                    .get("experience")
+                    .getAsJsonObject();
+            experienceTypeService.experienceTypeRepository
+                    .findById(experience_type_json
+                            .get("id")
+                            .getAsString())
+                    .ifPresent(vacancy::setExperience);
+        }
         //
         // EmploymentType
         //
-        JsonObject employment_type_json = vacancy_json.get("employment").getAsJsonObject();
-        employmentTypeService.employmentTypeRepository
-                .findById(employment_type_json
-                        .get("id")
-                        .getAsString())
-                .ifPresent(vacancy::setEmployment);
+        if (!vacancy_json.get("employment").getAsJsonObject().isJsonNull())
+        {
+            JsonObject employment_type_json = vacancy_json.get("employment").getAsJsonObject();
+            employmentTypeService.employmentTypeRepository
+                    .findById(employment_type_json
+                            .get("id")
+                            .getAsString())
+                    .ifPresent(vacancy::setEmployment);
+        }
         //
         // ScheduleType
         //
-        JsonObject schedule_type_json = vacancy_json.get("schedule").getAsJsonObject();
-        scheduleTypeService.scheduleTypeRepository
-                .findById(schedule_type_json
-                        .get("id")
-                        .getAsString())
-                .ifPresent(vacancy::setSchedule);
+        if (!vacancy_json.get("schedule").getAsJsonObject().isJsonNull())
+        {
+            JsonObject schedule_type_json = vacancy_json.get("schedule").getAsJsonObject();
+            scheduleTypeService.scheduleTypeRepository
+                    .findById(schedule_type_json
+                            .get("id")
+                            .getAsString())
+                    .ifPresent(vacancy::setSchedule);
+        }
         //
         // Specialization's with ProfArea's
         //
@@ -1092,13 +1118,13 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         {
             JsonObject array_element = key_skills_json.get(i).getAsJsonObject();
             // вот тут нужна проверка, т.к. данные не со справочников, а введённые вручную
-            if (keySkillService.existsByName(array_element
+            if (keySkillService.keySkillRepository.existsByName(array_element
                     .get("name")
                     .getAsString())
             )
             {
                 // add
-                key_skills.add(keySkillService
+                key_skills.add(keySkillService.keySkillRepository
                         .findOneByName(array_element
                                 .get("name")
                                 .getAsString()));
@@ -1110,8 +1136,7 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                         .get("name")
                         .getAsString());
                 // add and save
-                key_skills.add(keySkillService.keySkillRepository
-                        .save(key_skill));
+                key_skills.add(keySkillService.keySkillRepository.save(key_skill));
             }
         }
         // set
@@ -1139,23 +1164,22 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
             vacancy.setDriver_licenses(driver_licenses);
         }
         vacancyService.vacancyRepository.save(vacancy);
-        // !!! где-то тут ещё нужно сохранить саму вакансию
     }
 
 
 
     private void GetTestVacancy(int id)
     {
-        NetworkService.getInstance().getHeadHunterApi().getVacancyById(id).enqueue(new Callback<>() {
+        NetworkService.getInstance().getHeadHunterApi().getVacancyById(String.valueOf(id)).enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<JsonObject> call, @NonNull Response<JsonObject> response)
             {
                 if (response.isSuccessful())
                 {
-                    if(!response.body().isJsonNull())
+                    JsonObject json = response.body();
+                    if(!json.isJsonNull())
                     {
-                        JsonObject vacancy_json = response.body().getAsJsonObject();
-                        JsonElement salary_json = vacancy_json.get("salary");
+                        JsonElement salary_json = json.get("salary");
                         System.out.println(salary_json.isJsonNull());
                     }
                 }
@@ -1175,6 +1199,193 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         addressService.addressRepository.save(address);
     }
 
+    // Заполнение списка вакансий на основном меню - ListModel, ListRenderer
+    // Вывод информации об отдельных вакансиях на панель фрейма - GridBagLayout
+
+    private static ListCellRenderer<? super Vacancy> createListRenderer() {
+        return new DefaultListCellRenderer() {
+
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus)
+            {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (c instanceof JLabel)
+                {
+                    JLabel label = (JLabel) c;
+                    Vacancy vacancy = (Vacancy) value;
+                    //
+                    JPanel main_panel = new JPanel();
+                    JPanel center_panel = new JPanel();
+                    JPanel right_panel = new JPanel();
+                    ///////
+                    // Center Panel
+                    JLabel label_vacancy_name = new JLabel();
+                    JLabel label_company_name = new JLabel();
+                    JLabel label_address_n_metro = new JLabel();
+                    //JLabel label_requirements = new JLabel();
+                    ///////
+                    // Right Panel
+                    JLabel label_salary = new JLabel();
+                    JLabel label_data = new JLabel();
+                    ///////
+                    // Fonts
+                    Font arial_16 = new Font("Arial", Font.PLAIN, 16);
+                    Font arial_12 = new Font("Arial", Font.PLAIN, 12);
+                    ///////
+                    // Fonts settings
+                    label_vacancy_name.setFont(arial_16);
+                    label_company_name.setFont(arial_12);
+                    label_address_n_metro.setFont(arial_12);
+                    //label_requirements.setFont(arial_12);
+                    //
+                    label_salary.setFont(arial_16);
+                    label_data.setFont(arial_12);
+                    ///////
+                    // Center Panel Data
+                    label_vacancy_name.setText(vacancy.getName());
+                    label_company_name.setText(vacancy.getEmployer().getName());
+                    //
+                    String address = vacancy.getAddress().getCity();
+                    if (vacancy.getMetro_stations().size() != 0)
+                    {
+                        MetroStation[] metro_stations = vacancy.getMetro_stations().toArray(new MetroStation[vacancy.getMetro_stations().size()]);
+                        for (int i = 0; i < metro_stations.length; i++)
+                        {
+                            address += (", " + metro_stations[i].getName());
+                        }
+                    }
+                    // !!! Нужно ещё добавить сюда цвета станций
+                    label_address_n_metro.setText(address);
+                    //
+                    ///////
+                    // Layouts
+                    center_panel.setLayout(new GridBagLayout());
+                    right_panel.setLayout(new GridBagLayout());
+                    GridBagConstraints constraints = new GridBagConstraints();
+                    ///////
+                    // Center Panel Constraints
+                    constraints.fill = GridBagConstraints.HORIZONTAL;
+                    constraints.ipady = 0;
+                    constraints.gridx = 0;
+                    constraints.gridy = 0;
+                    constraints.insets = new Insets(0, 0, 20, 0);
+                    center_panel.add(label_vacancy_name, constraints);
+                    //
+                    constraints.fill = GridBagConstraints.HORIZONTAL;
+                    constraints.ipady = 0;
+                    constraints.gridx = 0;
+                    constraints.gridy = 1;
+                    constraints.insets = new Insets(0, 0, 14, 0);
+                    center_panel.add(label_company_name, constraints);
+                    //
+                    constraints.fill = GridBagConstraints.HORIZONTAL;
+                    constraints.ipady = 0;
+                    constraints.gridx = 0;
+                    constraints.gridy = 2;
+                    constraints.insets = new Insets(0, 0, 0, 0);
+                    // bottom 18 if exists requirements
+                    center_panel.add(label_address_n_metro, constraints);
+                    //
+                    //constraints.fill = GridBagConstraints.HORIZONTAL;
+                    //constraints.ipady = 0;
+                    //constraints.gridx = 0;
+                    //constraints.gridy = 3;
+                    //constraints.insets = new Insets(0, 0, 0, 0);
+                    //center_panel.add(label_requirements, constraints);
+                    ///////
+                    // Right Panel Data
+                    String salary = "";
+                    if (vacancy.getSalary_to() > 0)
+                    {
+                        salary += vacancy.getSalary_from() + " — " + vacancy.getSalary_to();
+                    }
+                    else if (vacancy.getSalary_from() > 0)
+                    {
+                        salary += vacancy.getSalary_from();
+                    }
+                    else
+                    {
+                        salary += "Не указано";
+                    }
+                    label_salary.setText(salary);
+                    //
+                    LocalDateTime localDateTime = vacancy.getPublished_at();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy", new Locale("ru"));
+                    label_data.setText(localDateTime.format(formatter));
+                    // Right Panel Constraints
+                    constraints.fill = GridBagConstraints.HORIZONTAL;
+                    constraints.ipady = 0;
+                    constraints.gridx = 0;
+                    constraints.gridy = 0;
+                    constraints.insets = new Insets(0, 0, 40, 0);
+                    right_panel.add(label_salary, constraints);
+                    //
+                    constraints.fill = GridBagConstraints.HORIZONTAL;
+                    constraints.ipady = 0;
+                    constraints.gridx = 0;
+                    constraints.gridy = 1;
+                    constraints.insets = new Insets(0, 0, 0, 0);
+                    center_panel.add(label_data, constraints);
+                    //
+                    main_panel.getRootPane().setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+                    main_panel.setLayout(new BorderLayout());
+                    main_panel.add(center_panel, BorderLayout.CENTER);
+                    main_panel.add(right_panel, BorderLayout.EAST);
+                    label.add(main_panel);
+
+                    // Возможно понадобится, для отображения цветного кружка рядом с названием ст. метро
+                    /*
+                    //Color metro_station_color = new Color(255, 255, 255, 255);
+                    // Распарсим String, отделив имя от цвета
+                    try
+                    {
+                        String[] data = metro_name_n_color.split("_");
+                        // Имя
+                        label.setText(data[0]);
+                        // Цвет
+                        //metro_station_color = Color.decode(data[1]);
+                    }
+                    catch (NullPointerException nullPointerException)
+                    {
+                        // Если что-то пойдёт не так
+                        //
+                        // Стокорое имя
+                        metro_name_n_color = (String) value;
+                        // Стоковый цвет
+                        //metro_station_color = new Color(255, 255, 255, 255);
+                    }
+                    // Final Color
+                    //Color final_metro_station_color = metro_station_color;
+                    //
+                    //
+                    Icon icon_metro_line_color = new Icon() {
+                        @Override
+                        public void paintIcon(Component c, Graphics g, int x, int y) {
+                            Graphics2D g2d = ( Graphics2D ) g;
+                            //g2d.setRenderingHint ( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+                            java.awt.geom.Area circle = new java.awt.geom.Area(new Ellipse2D.Double ( 10, 4, 10, 10 ));
+                            g2d.setPaint(final_metro_station_color);
+                            g2d.fill(circle);
+                        }
+
+                        @Override
+                        public int getIconWidth() {
+                            return 0;
+                        }
+
+                        @Override
+                        public int getIconHeight() {
+                            return 0;
+                        }
+                    };
+                    label.setIcon(icon_metro_line_color);
+                    label.setBorder(BorderFactory.createEmptyBorder(0, 25, 0, 5));
+                    label.setOpaque(true);*/
+                }
+                return c;
+            }
+        };
+    }
 
 
 
@@ -1236,6 +1447,8 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
 
     // Вовсе не обязательно добавлять к response.body() ещё и getAsJsonArray или getAsJsonObject
     // т.к. тип вовращаемого значения уже прописан в методе
+
+    // Ctrl + Shift + Minus для сворачивания всего чего только можно
 
 
 
@@ -1460,15 +1673,33 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
                 //TestSave(test_address);
                 //dispose(); // Выход
                 //GetTestVacancy(44552119);
+
+                GetDictionaries();
                 GetAreas();
                 GetProfAreasAndSpecializations();
                 GetCompanyIndustriesAndCompanyScopes();
+                try {
+                    Thread.sleep(20000);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
                 // Не успевает загрузиться, т.к. Areas ещё не добавились до конца
                 // Возможно, стоит поставить загрузку Areas в начале, т.к. они ни от чего не зависят
                 GetMetroStationsAndLines();
                 // Должен идти следом, чтобы не нужно было перезаходить
                 // в окно для работы с окошками, генерируемыми из БД
                 SetStaticClassesParametersToNull();
+
+
+
+                GetVacancyJsonByUrl("https://api.hh.ru/vacancies/44711017");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+                System.out.println(single_vacancy_json);
+                ParseAndSaveVacancyFromJson(single_vacancy_json);
             }
         });
         panel_south_west.add(btn_load);
@@ -1492,6 +1723,10 @@ public class HeadHunterJSP_App_MainFrame extends JFrame
         //
     }
 }
+
+
+
+
 
 ///              ///
 /// GARBAGE CODE ///

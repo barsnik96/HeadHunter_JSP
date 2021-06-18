@@ -3,10 +3,7 @@ package by.barsnik96.HeadHunter_JSP.domain;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Getter
 @Setter
@@ -15,6 +12,7 @@ import javax.persistence.Table;
 public class KeySkill
 {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "key_skill_ID")
     private int id;
 

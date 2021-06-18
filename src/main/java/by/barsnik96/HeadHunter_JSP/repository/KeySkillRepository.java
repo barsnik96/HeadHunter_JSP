@@ -9,5 +9,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface KeySkillRepository extends JpaRepository<KeySkill, Integer>
 {
+    boolean existsByName(String name);
 
+    KeySkill findOneByName(String name);
 }

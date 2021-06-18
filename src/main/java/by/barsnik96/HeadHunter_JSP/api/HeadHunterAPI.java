@@ -1,6 +1,7 @@
 package by.barsnik96.HeadHunter_JSP.api;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import retrofit2.Call;
 import retrofit2.http.*;
@@ -10,10 +11,10 @@ import java.util.ArrayList;
 public interface HeadHunterAPI
 {
     @GET("vacancies/{vacancy_id}")
-    Call<JsonObject> getVacancyById(@Path("vacancy_id") int vacancyId);
+    Call<JsonObject> getVacancyById(@Path("vacancy_id") String vacancyId);
 
     @GET
-    Call<JsonObject> getVacancyByUrl(@Url String url);
+    Call<JsonElement> getVacancyByUrl(@Url String url);
 
     @GET("vacancies/")
     Call<JsonObject> getVacancies(@Query("text") String text,
